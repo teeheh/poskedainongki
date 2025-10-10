@@ -391,13 +391,33 @@
                     <!-- Opsi pembayaran akan dimuat di sini -->
                 </select>
             </div>
+            
+            <!-- Tombol Saran Pembayaran -->
             <div class="form-group">
-                <label for="amount-paid">Jumlah Bayar</label>
-                <input type="number" id="amount-paid" class="form-control" required>
+                <label>Pilih Jumlah Pembayaran:</label>
+                <div class="payment-suggestions" id="payment-suggestions">
+                    <!-- Tombol saran akan dimuat di sini -->
+                </div>
             </div>
+            
             <div class="form-group">
-                <label>Kembalian: <span id="change-amount">Rp 0</span></label>
+                <label for="amount-paid">Jumlah Bayar (Manual)</label>
+                <input type="number" id="amount-paid" class="form-control" placeholder="Masukkan jumlah manual">
             </div>
+            
+            <!-- Hasil Pembayaran -->
+            <div class="payment-result" id="payment-result" style="display: none;">
+                <div class="form-group">
+                    <label>Kembalian: <span id="change-amount">Rp 0</span></label>
+                </div>
+                <div class="form-group" id="change-breakdown" style="display: none;">
+                    <label>Komposisi Kembalian:</label>
+                    <div id="change-composition" class="change-composition">
+                        <!-- Komposisi kembalian akan dimuat di sini -->
+                    </div>
+                </div>
+            </div>
+            
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
                 <button type="button" class="btn btn-primary" id="confirm-payment">

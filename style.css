@@ -1122,6 +1122,116 @@ body {
     to { opacity: 1; }
 }
 
+/* Payment Suggestions */
+.payment-suggestions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.payment-suggestion-btn {
+    padding: 12px 8px;
+    border: 2px solid var(--primary-color);
+    background-color: white;
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: var(--transition);
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-suggestion-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 168, 204, 0.3);
+}
+
+.payment-suggestion-btn.selected {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 168, 204, 0.3);
+}
+
+.payment-suggestion-btn.manual {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.payment-suggestion-btn.manual:hover,
+.payment-suggestion-btn.manual.selected {
+    background-color: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 8px rgba(255, 159, 67, 0.3);
+}
+
+.payment-suggestion-btn.exact {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.payment-suggestion-btn.exact:hover,
+.payment-suggestion-btn.exact.selected {
+    background-color: var(--success-color);
+    color: white;
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Payment Result */
+.payment-result {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin: 15px 0;
+    border-left: 4px solid var(--primary-color);
+}
+
+.change-composition {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.change-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f3f4;
+    font-size: 0.9rem;
+}
+
+.change-item:last-child {
+    border-bottom: none;
+}
+
+.change-denomination {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.change-count {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.no-change {
+    text-align: center;
+    color: var(--success-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 10px;
+}
+
 /* Utility Classes */
 .text-center {
     text-align: center;

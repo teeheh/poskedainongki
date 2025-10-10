@@ -79,6 +79,17 @@ const transactionTableBody = document.getElementById('transaction-table-body');
 const transactionSearch = document.getElementById('transaction-search');
 const dateFilter = document.getElementById('date-filter');
 
+// Payment System Elements
+const paymentSuggestions = document.getElementById('payment-suggestions');
+const paymentResult = document.getElementById('payment-result');
+const changeBreakdown = document.getElementById('change-breakdown');
+const changeComposition = document.getElementById('change-composition');
+
+// Payment System Variables
+const availableDenominations = [5000, 10000, 20000, 50000, 100000];
+const changeDenominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
+let selectedPaymentAmount = 0;
+
 // Format Rupiah
 function formatRupiah(amount) {
     return new Intl.NumberFormat('id-ID', {
@@ -91,6 +102,168 @@ function formatRupiah(amount) {
 // Generate ID Unik
 function generateId(prefix) {
     return prefix + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+// Payment System Functions
+
+// Generate payment suggestions based on total amount
+function generatePaymentSuggestions(total) {
+    const suggestions = [];
+    
+    // Always add manual input button
+    suggestions.push({
+        type: 'manual',
+        label: 'Input Manual',
+        value: 0,
+        class: 'manual'
+    });
+    
+    // Always add exact amount button
+    suggestions.push({
+        type: 'exact',
+        label: `Uang Pas<br>${formatRupiah(total)}`,
+        value: total,
+        class: 'exact'
+    });
+    
+    // Add denomination suggestions based on total
+    for (const denomination of availableDenominations) {
+        if (denomination >= total) {
+            suggestions.push({
+                type: 'denomination',
+                label: formatRupiah(denomination),
+                value: denomination,
+                class: 'denomination'
+            });
+        }
+    }
+    
+    return suggestions;
+}
+
+// Calculate optimal change composition using greedy algorithm
+function calculateChangeComposition(changeAmount) {
+    if (changeAmount === 0) {
+        return [];
+    }
+    
+    const composition = [];
+    let remaining = changeAmount;
+    
+    for (const denomination of changeDenominations) {
+        if (remaining >= denomination) {
+            const count = Math.floor(remaining / denomination);
+            composition.push({
+                denomination: denomination,
+                count: count,
+                total: count * denomination
+            });
+            remaining -= count * denomination;
+        }
+        
+        if (remaining === 0) {
+            break;
+        }
+    }
+    
+    return composition;
+}
+
+// Render payment suggestions
+function renderPaymentSuggestions(total) {
+    const suggestions = generatePaymentSuggestions(total);
+    
+    paymentSuggestions.innerHTML = suggestions.map(suggestion => `
+        <button type="button" 
+                class="payment-suggestion-btn ${suggestion.class}" 
+                data-value="${suggestion.value}" 
+                data-type="${suggestion.type}">
+            ${suggestion.label}
+        </button>
+    `).join('');
+    
+    // Add event listeners to suggestion buttons
+    const suggestionBtns = paymentSuggestions.querySelectorAll('.payment-suggestion-btn');
+    suggestionBtns.forEach(btn => {
+        btn.addEventListener('click', handlePaymentSuggestionClick);
+    });
+}
+
+// Handle payment suggestion button click
+function handlePaymentSuggestionClick(e) {
+    const btn = e.currentTarget;
+    const value = parseFloat(btn.dataset.value);
+    const type = btn.dataset.type;
+    
+    // Remove selected class from all buttons
+    paymentSuggestions.querySelectorAll('.payment-suggestion-btn').forEach(b => {
+        b.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked button
+    btn.classList.add('selected');
+    
+    if (type === 'manual') {
+        // Focus on manual input
+        amountPaidInput.focus();
+        selectedPaymentAmount = 0;
+    } else {
+        // Set the selected amount
+        selectedPaymentAmount = value;
+        amountPaidInput.value = value;
+        
+        // Calculate and display payment result
+        calculateAndDisplayPaymentResult(value);
+    }
+}
+
+// Calculate and display payment result
+function calculateAndDisplayPaymentResult(amountPaid) {
+    const total = parseFloat(checkoutTotalSpan.textContent.replace(/[^\d]/g, '')) || 0;
+    
+    if (amountPaid < total) {
+        // Show error for insufficient payment
+        paymentResult.style.display = 'block';
+        changeAmountSpan.textContent = 'Pembayaran Kurang!';
+        changeAmountSpan.style.color = 'var(--danger-color)';
+        changeBreakdown.style.display = 'none';
+        return false;
+    }
+    
+    const change = amountPaid - total;
+    
+    // Show payment result
+    paymentResult.style.display = 'block';
+    changeAmountSpan.style.color = 'var(--dark-color)';
+    
+    if (change === 0) {
+        changeAmountSpan.textContent = 'Uang Pas / Tidak Ada Kembalian';
+        changeBreakdown.style.display = 'none';
+    } else {
+        changeAmountSpan.textContent = formatRupiah(change);
+        
+        // Calculate and display change composition
+        const composition = calculateChangeComposition(change);
+        renderChangeComposition(composition);
+        changeBreakdown.style.display = 'block';
+    }
+    
+    return true;
+}
+
+// Render change composition
+function renderChangeComposition(composition) {
+    if (composition.length === 0) {
+        changeComposition.innerHTML = '<div class="no-change">Tidak ada kembalian</div>';
+        return;
+    }
+    
+    changeComposition.innerHTML = composition.map(item => `
+        <div class="change-item">
+            <span class="change-denomination">${formatRupiah(item.denomination)}</span>
+            <span class="change-count">${item.count} lembar/koin</span>
+        </div>
+    `).join('');
 }
 
 // Tampilkan status loading
@@ -1094,10 +1267,16 @@ function calculateChange() {
 // Proses Pembayaran
 async function processPayment() {
     const total = parseFloat(cartTotal.textContent.replace(/[^\d]/g, '')) || 0;
-    const amountPaid = parseFloat(amountPaidInput.value) || 0;
+    const amountPaid = parseFloat(amountPaidInput.value) || selectedPaymentAmount || 0;
+    
+    // Validate payment amount
+    if (amountPaid <= 0) {
+        alert('Silakan pilih jumlah pembayaran atau masukkan jumlah manual!');
+        return;
+    }
     
     if (amountPaid < total) {
-        alert('Jumlah bayar kurang dari total!');
+        alert('Uang yang dibayarkan kurang dari total belanja!');
         return;
     }
     
@@ -1145,7 +1324,27 @@ async function processPayment() {
         // Simpan transaksi ke Google Sheets
         await saveTransaction(transaction, details);
         
-        alert(`Transaksi ${transactionId} berhasil!\nTotal: ${formatRupiah(total)}\nBayar: ${formatRupiah(amountPaid)}\nKembalian: ${formatRupiah(amountPaid - total)}\nMetode: ${paymentMethod.name}`);
+        // Create success message with change composition
+        const change = amountPaid - total;
+        let successMessage = `Transaksi ${transactionId} berhasil!\nTotal: ${formatRupiah(total)}\nBayar: ${formatRupiah(amountPaid)}`;
+        
+        if (change === 0) {
+            successMessage += '\nUang Pas / Tidak Ada Kembalian';
+        } else {
+            successMessage += `\nKembalian: ${formatRupiah(change)}`;
+            
+            // Add change composition to message
+            const composition = calculateChangeComposition(change);
+            if (composition.length > 0) {
+                successMessage += '\n\nKomposisi Kembalian:';
+                composition.forEach(item => {
+                    successMessage += `\n${formatRupiah(item.denomination)}: ${item.count} lembar/koin`;
+                });
+            }
+        }
+        
+        successMessage += `\nMetode: ${paymentMethod.name}`;
+        alert(successMessage);
         
         // Reset keranjang
         cart = [];
@@ -1153,6 +1352,7 @@ async function processPayment() {
         
         // Tutup modal
         checkoutModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
     } catch (error) {
         console.error('Error menyimpan transaksi:', error);
         alert('Gagal menyimpan transaksi. Silakan coba lagi.');
@@ -1300,9 +1500,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        const total = parseFloat(cartTotal.textContent.replace(/[^\d]/g, '')) || 0;
         checkoutTotalSpan.textContent = cartTotal.textContent;
+        
+        // Reset payment form
         amountPaidInput.value = '';
-        changeAmountSpan.textContent = formatRupiah(0);
+        selectedPaymentAmount = 0;
+        paymentResult.style.display = 'none';
+        changeBreakdown.style.display = 'none';
+        
+        // Generate and render payment suggestions
+        renderPaymentSuggestions(total);
         
         checkoutModal.classList.add('active');
         document.body.style.overflow = 'hidden'; // Mencegah scroll pada background
@@ -1315,9 +1523,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        const total = parseFloat(cartTotal.textContent.replace(/[^\d]/g, '')) || 0;
         checkoutTotalSpan.textContent = cartTotal.textContent;
+        
+        // Reset payment form
         amountPaidInput.value = '';
-        changeAmountSpan.textContent = formatRupiah(0);
+        selectedPaymentAmount = 0;
+        paymentResult.style.display = 'none';
+        changeBreakdown.style.display = 'none';
+        
+        // Generate and render payment suggestions
+        renderPaymentSuggestions(total);
         
         checkoutModal.classList.add('active');
         document.body.style.overflow = 'hidden'; // Mencegah scroll pada background
@@ -1507,11 +1723,6 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentModal.classList.remove('active');
     });
     
-    document.getElementById('close-checkout-modal').addEventListener('click', () => {
-        checkoutModal.classList.remove('active');
-        document.body.style.overflow = ''; // Mengembalikan scroll pada background
-    });
-    
     document.getElementById('cancel-product').addEventListener('click', () => {
         productModal.classList.remove('active');
     });
@@ -1523,14 +1734,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cancel-payment').addEventListener('click', () => {
         paymentModal.classList.remove('active');
     });
-    
-    document.getElementById('cancel-checkout').addEventListener('click', () => {
-        checkoutModal.classList.remove('active');
-        document.body.style.overflow = ''; // Mengembalikan scroll pada background
-    });
-    
-    // Hitung kembalian saat jumlah bayar berubah
-    amountPaidInput.addEventListener('input', calculateChange);
     
     // Search functionality for settings page
     document.getElementById('product-search').addEventListener('input', (e) => {
@@ -1579,3 +1782,39 @@ function filterTable(tableBodyId, searchTerm, searchColumns) {
     
     // Konfirmasi pembayaran
     confirmPaymentBtn.addEventListener('click', processPayment);
+    
+    // Manual payment input
+    amountPaidInput.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value) || 0;
+        
+        // Remove selected class from all suggestion buttons
+        if (paymentSuggestions) {
+            paymentSuggestions.querySelectorAll('.payment-suggestion-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+        
+        // Reset selected payment amount
+        selectedPaymentAmount = 0;
+        
+        // Calculate and display result if value is entered
+        if (value > 0) {
+            calculateAndDisplayPaymentResult(value);
+        } else {
+            // Hide payment result if no value
+            if (paymentResult) {
+                paymentResult.style.display = 'none';
+            }
+        }
+    });
+    
+    // Close modal event listeners
+    document.getElementById('close-checkout-modal').addEventListener('click', () => {
+        checkoutModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+    
+    document.getElementById('cancel-checkout').addEventListener('click', () => {
+        checkoutModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
