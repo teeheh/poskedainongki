@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Kedai Nongki</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <!-- Halaman Login -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+                <h2><i class="fas fa-coffee"></i> POS Kedai Nongki</h2>
+                <p>Silakan login untuk mengakses sistem kasir</p>
+                <button id="login-btn" class="login-btn">
+                    <i class="fab fa-google"></i> Login dengan Google
+                </button>
+                <div id="login-status" class="mt-3" style="color: #666; font-size: 0.9rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Utama (Kasir) -->
+    <div id="kasir-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-cash-register"></i> Kasir</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <span id="user-name">User</span>
+                </div>
+            </div>
+
+            <div class="kasir-layout">
+                <div class="product-grid-container">
+                    <!-- <h3 class="mb-3">Kategori Produk</h3> -->
+                    <div class="category-list" id="category-list">
+                        <!-- Kategori akan dimuat di sini -->
+                    </div>
+                    <div class="product-grid" id="product-grid">
+                        <!-- Produk akan dimuat di sini -->
+                    </div>
+                </div>
+
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <h3>Keranjang</h3>
+                        <span id="cart-count">0 item</span>
+                    </div>
+                    <div class="cart-items" id="cart-items">
+                        <!-- Item keranjang akan dimuat di sini -->
+                    </div>
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">Rp 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Diskon:</span>
+                            <span id="cart-discount">Rp 0</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total:</span>
+                            <span id="cart-total">Rp 0</span>
+                        </div>
+                        <button class="checkout-btn" id="checkout-btn">
+                            <i class="fas fa-credit-card"></i> Proses Pembayaran
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Pengaturan -->
+    <div id="pengaturan-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-cog"></i> Pengaturan</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar-settings">U</div>
+                    <span id="user-name-settings">User</span>
+                </div>
+            </div>
+
+            <div class="pengaturan-container">
+                <div class="pengaturan-tabs">
+                    <button class="tab-btn active" data-tab="produk">Produk</button>
+                    <button class="tab-btn" data-tab="kategori">Kategori</button>
+                    <button class="tab-btn" data-tab="pembayaran">Pembayaran</button>
+                    <button class="tab-btn" data-tab="detail_transaksi">Transaksi</button>
+                </div>
+
+                <div id="produk-tab" class="tab-content active">
+                    <div class="tab-header">
+                        <button class="add-btn" id="add-product-btn">
+                            <i class="fas fa-plus"></i> Tambah Produk
+                        </button>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="product-search" placeholder="Cari produk...">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Produk</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body">
+                            <!-- Data produk akan dimuat di sini -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="kategori-tab" class="tab-content">
+                    <div class="tab-header">
+                        <button class="add-btn" id="add-category-btn">
+                            <i class="fas fa-plus"></i> Tambah Kategori
+                        </button>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="category-search" placeholder="Cari kategori...">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Kategori</th>
+                                <th>Urutan</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="category-table-body">
+                            <!-- Data kategori akan dimuat di sini -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="pembayaran-tab" class="tab-content">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="payment-search" placeholder="Cari metode pembayaran...">
+                        </div>
+                    </div>
+                    
+                    <!-- Card view untuk metode pembayaran -->
+                    <div class="payment-cards" id="payment-cards">
+                        <!-- Data pembayaran akan dimuat di sini sebagai cards -->
+                    </div>
+                    
+                    <!-- Floating Action Button untuk tambah metode -->
+                    <button class="floating-action-btn" id="add-payment-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <div id="detail_transaksi-tab" class="tab-content">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="transaction-search" placeholder="Cari transaksi...">
+                        </div>
+                        <div class="filter-box">
+                            <label for="date-filter">Filter Tanggal:</label>
+                            <input type="date" id="date-filter" class="form-control">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Transaksi</th>
+                                <th>Tanggal</th>
+                                <th>Total</th>
+                                <th>Metode Pembayaran</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body">
+                            <!-- Data transaksi akan dimuat di sini -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Modal Detail Transaksi -->
+                    <div id="transaction-detail-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Detail Transaksi</h3>
+                                <span class="close-modal" id="close-transaction-detail">&times;</span>
+                            </div>
+                            <div class="modal-body">
+                                <div class="transaction-info">
+                                    <div class="info-row">
+                                        <span class="info-label">ID Transaksi:</span>
+                                        <span id="detail-transaction-id" class="info-value"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Tanggal:</span>
+                                        <span id="detail-transaction-date" class="info-value"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Metode Pembayaran:</span>
+                                        <span id="detail-payment-method" class="info-value"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Status:</span>
+                                        <span id="detail-transaction-status" class="info-value"></span>
+                                    </div>
+                                </div>
+                                
+                                <h4>Detail Item</h4>
+                                <div class="detail-table-container">
+                                    <table class="detail-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Detail</th>
+                                                <th>ID Produk</th>
+                                                <th>Nama Produk</th>
+                                                <th>Harga Satuan</th>
+                                                <th>Kuantitas</th>
+                                                <th>Total Item</th>
+                                                <th>Catatan Item</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transaction-items-body">
+                                            <!-- Detail item transaksi akan dimuat di sini -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="transaction-summary">
+                                    <div class="summary-row">
+                                        <span>Total:</span>
+                                        <span id="detail-transaction-total"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="print-transaction-detail" class="btn primary-btn">
+                                    <i class="fas fa-print"></i> Cetak
+                                </button>
+                                <button id="close-detail-btn" class="btn secondary-btn">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Tambah/Edit Produk -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="product-modal-title">Tambah Produk</h3>
+                <button class="close-btn" id="close-product-modal">&times;</button>
+            </div>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">Nama Produk</label>
+                    <input type="text" id="product-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Kategori</label>
+                    <select id="product-category" class="form-control" required>
+                        <!-- Opsi kategori akan dimuat di sini -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Harga</label>
+                    <input type="number" id="product-price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Deskripsi</label>
+                    <textarea id="product-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">URL Gambar</label>
+                    <input type="text" id="product-image" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="product-status">Status</label>
+                    <select id="product-status" class="form-control" required>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-product">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="save-product-btn">
+                        <span id="product-save-text">Simpan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Tambah/Edit Kategori -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="category-modal-title">Tambah Kategori</h3>
+                <button class="close-btn" id="close-category-modal">&times;</button>
+            </div>
+            <form id="category-form">
+                <div class="form-group">
+                    <label for="category-name">Nama Kategori</label>
+                    <input type="text" id="category-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-order">Urutan</label>
+                    <input type="number" id="category-order" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-status">Status</label>
+                    <select id="category-status" class="form-control" required>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-category">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="save-category-btn">
+                        <span id="category-save-text">Simpan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Tambah/Edit Metode Pembayaran -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="payment-modal-title">Tambah Metode Pembayaran</h3>
+                <button class="close-btn" id="close-payment-modal">&times;</button>
+            </div>
+            <form id="payment-form">
+                <div class="form-group">
+                    <label for="payment-name">Nama Metode</label>
+                    <input type="text" id="payment-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="payment-type">Tipe</label>
+                    <select id="payment-type" class="form-control" required>
+                        <option value="Tunai">Tunai</option>
+                        <option value="Digital">Digital</option>
+                        <option value="Kartu">Kartu</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="payment-status">Status</label>
+                    <select id="payment-status" class="form-control" required>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-payment">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="save-payment-btn">
+                        <span id="payment-save-text">Simpan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Pembayaran -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Proses Pembayaran</h3>
+                <button class="close-btn" id="close-checkout-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Total: <span id="checkout-total">Rp 0</span></label>
+            </div>
+            <div class="form-group">
+                <label for="payment-method">Metode Pembayaran</label>
+                <select id="payment-method" class="form-control" required>
+                    <!-- Opsi pembayaran akan dimuat di sini -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount-paid">Jumlah Bayar</label>
+                <input type="number" id="amount-paid" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Kembalian: <span id="change-amount">Rp 0</span></label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
+                <button type="button" class="btn btn-primary" id="confirm-payment">
+                    <span id="confirm-payment-text">Konfirmasi</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Keranjang Mobile -->
+    <div id="keranjang-mobile-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-shopping-cart"></i> Keranjang</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar-keranjang">U</div>
+                    <span id="user-name-keranjang">User</span>
+                </div>
+            </div>
+
+            <div class="keranjang-mobile-container">
+                <div class="cart-items" id="cart-items-mobile">
+                    <!-- Item keranjang akan dimuat di sini -->
+                </div>
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal-mobile">Rp 0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Diskon:</span>
+                        <span id="cart-discount-mobile">Rp 0</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total:</span>
+                        <span id="cart-total-mobile">Rp 0</span>
+                    </div>
+                    <button class="checkout-btn" id="checkout-btn-mobile">
+                        <i class="fas fa-credit-card"></i> Proses Pembayaran
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" data-page="kasir-page">
+            <i class="fas fa-cash-register nav-icon"></i>
+            <span>Kasir</span>
+        </a>
+        <a href="#" class="nav-item" data-page="keranjang-mobile-page">
+            <i class="fas fa-shopping-cart nav-icon"></i>
+            <span>Keranjang</span>
+            <span class="cart-badge" id="mobile-cart-badge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-page="pengaturan-page">
+            <i class="fas fa-cog nav-icon"></i>
+            <span>Pengaturan</span>
+        </a>
+        <a href="#" class="nav-item" id="logout-btn">
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+
+    <!-- Google API Scripts -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script src="app.js"></script>
+    <script src="transaction.js"></script>
+</body>
+</html>
