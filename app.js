@@ -112,6 +112,66 @@ function generateId(prefix) {
 
 // Payment System Functions
 
+// Payment suggestions algorithm
+function getAvailablePaymentOptions(total) {
+    const roundUp = (num, multiple) => Math.ceil(num / multiple) * multiple;
+    const options = [];
+
+    // Selalu tambahkan uang pas terlebih dahulu
+    options.push(total);
+
+    let nearOptions = [];
+
+    if (total < 10000) {
+        nearOptions.push(roundUp(total, 5000));
+        nearOptions.push(10000);
+    } else if (total < 20000) {
+        const r1 = roundUp(total, 5000);
+        if (r1 < 20000) nearOptions.push(r1);
+        if (r1 + 5000 <= 20000) nearOptions.push(r1 + 5000);
+    } else if (total < 50000) {
+        const r1 = roundUp(total, 5000);
+        nearOptions.push(r1);
+        const next10 = roundUp(r1 + 10000, 10000);
+        if (next10 <= 50000) nearOptions.push(next10);
+    } else if (total < 100000) {
+        const r1 = roundUp(total, 5000);
+        nearOptions.push(r1);
+        if (r1 + 5000 <= 100000) nearOptions.push(r1 + 5000);
+    } else if (total < 500000) {
+        // 🔧 Perubahan di sini: gunakan kelipatan 20.000 agar realistis
+        const r1 = roundUp(total, 5000);
+        const next20 = roundUp(total, 20000);
+        nearOptions.push(r1);
+        if (next20 !== r1) nearOptions.push(next20);
+    } else {
+        const r1 = roundUp(total, 50000);
+        nearOptions.push(r1);
+        nearOptions.push(r1 + 50000);
+    }
+
+    // Tambahkan pecahan besar umum sekali saja
+    if (total < 100000) {
+        nearOptions.push(50000);
+        nearOptions.push(100000);
+    }
+
+    // Gabungkan & hapus duplikat
+    const unique = Array.from(new Set([...options, ...nearOptions]));
+
+    // Filter nominal valid
+    const validDenoms = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000];
+    const result = unique
+        .filter(v => v >= total && validDenoms.some(d => v % d === 0))
+        .sort((a, b) => a - b);
+
+    return result;
+}
+
+
+
+
+
 // Render payment methods as buttons
 function renderPaymentMethods() {
     if (!paymentMethodsContainer) return;
@@ -155,25 +215,35 @@ function handlePaymentMethodClick(e) {
     };
 }
 
+// Format number to K (thousands) format
+function formatToK(number) {
+    if (number >= 1000) {
+        return Math.round(number / 1000) + 'K';
+    }
+    return number.toString();
+}
+
 // Generate payment suggestions for text options based on total amount
 function generatePaymentSuggestions(total) {
+    const availablePaymentOptions = getAvailablePaymentOptions(total);
     const suggestions = [];
 
-    // Always add exact amount option
+    // Add exact amount option first
     suggestions.push({
         type: 'exact',
-        label: `Uang Pas ${formatRupiah(total)}`,
+        label: `${formatToK(total)} (Pas)`,
         value: total,
         class: 'exact'
     });
 
-    // Add denomination suggestions based on total
-    for (const denomination of availableDenominations) {
-        if (denomination >= total) {
+    // Add all available payment options as suggestions
+    for (const value of availablePaymentOptions) {
+        // Only add if it's not the exact amount (already added above)
+        if (value !== total) {
             suggestions.push({
                 type: 'denomination',
-                label: formatRupiah(denomination),
-                value: denomination,
+                label: formatToK(value),
+                value: value,
                 class: 'denomination'
             });
         }
@@ -499,23 +569,30 @@ function handleSignout() {
 // Load semua data dari Google Sheets
 async function loadAllData() {
     try {
+        // Ambil data dari Google Sheets
         await loadCategories();
         await loadProducts();
         await loadPaymentMethods();
 
+        // Render elemen-elemen statis yang tidak butuh halaman kasir aktif
         renderProducts();
-        renderCart();
         renderProductTable();
         renderCategoryTable();
         renderPaymentTable();
         populateCategorySelect();
         populatePaymentMethodSelect();
         renderPaymentMethods();
+        renderCategories();
+
+        // ⚠️ Jangan panggil renderCart() di sini
+        // (akan dipanggil setelah kasir-page aktif di handleAuthClick)
     } catch (error) {
         console.error('Error loading data:', error);
         alert('Gagal memuat data dari Google Sheets. Periksa koneksi dan izin.');
     }
 }
+
+
 
 // Load produk dari Google Sheets
 async function loadProducts() {
@@ -923,7 +1000,7 @@ function renderCart() {
         cartItems.innerHTML = '<div class="text-center">Keranjang kosong</div>';
         cartCount.textContent = '0 item';
         cartSubtotal.textContent = formatRupiah(0);
-        cartDiscount.textContent = formatRupiah(0);
+        if (cartDiscount) cartDiscount.textContent = formatRupiah(0);
         cartTotal.textContent = formatRupiah(0);
 
         // Update mobile cart badge when cart is empty
@@ -956,14 +1033,14 @@ function renderCart() {
         cartItems.appendChild(cartItem);
     });
 
-    // Hitung diskon (contoh: 10% jika subtotal > 50000)
-    const discount = subtotal > 50000 ? subtotal * 0.1 : 0;
-    const total = subtotal - discount;
+    // Tidak ada diskon
+    const discount = 0;
+    const total = subtotal;
 
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.textContent = `${totalItems} item`;
     cartSubtotal.textContent = formatRupiah(subtotal);
-    cartDiscount.textContent = formatRupiah(discount);
+    if (cartDiscount) cartDiscount.textContent = formatRupiah(discount);
     cartTotal.textContent = formatRupiah(total);
 
     // Update mobile cart badge
@@ -1402,9 +1479,8 @@ async function processPayment() {
         // Use selected payment method
         const paymentMethod = selectedPaymentMethod;
 
-        // Hitung subtotal dan diskon
+        // Hitung subtotal tanpa diskon
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const discount = subtotal > 50000 ? subtotal * 0.1 : 0;
 
         // Simpan transaksi ke localStorage untuk Detail Transaksi
         if (typeof saveTransactionToLocalStorage === 'function' && cart && Array.isArray(cart) && cart.length > 0) {
@@ -1416,7 +1492,7 @@ async function processPayment() {
             id: transactionId,
             tanggal: new Date().toISOString(),
             total_penjualan: subtotal,
-            diskon: discount,
+            diskon: 0,
             subtotal: total,
             id_metode: paymentMethod.id,
             jumlah_bayar: amountPaid,
@@ -1533,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cartItemsMobile.innerHTML = '<div class="empty-cart">Keranjang kosong</div>';
             mobileCartBadge.textContent = '0';
             cartSubtotalMobile.textContent = formatRupiah(0);
-            cartDiscountMobile.textContent = formatRupiah(0);
+            if (cartDiscountMobile) cartDiscountMobile.textContent = formatRupiah(0);
             cartTotalMobile.textContent = formatRupiah(0);
             return;
         }
@@ -1559,15 +1635,15 @@ document.addEventListener('DOMContentLoaded', () => {
             cartItemsMobile.appendChild(cartItemMobileElement);
         });
 
-        // Update summary
-        const discount = subtotal > 50000 ? subtotal * 0.1 : 0;
-        const total = subtotal - discount;
+        // Update summary - tanpa diskon
+        const discount = 0;
+        const total = subtotal;
 
         // Update mobile - menampilkan jumlah total item di keranjang
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
         mobileCartBadge.textContent = totalItems;
         cartSubtotalMobile.textContent = formatRupiah(subtotal);
-        cartDiscountMobile.textContent = formatRupiah(discount);
+        if (cartDiscountMobile) cartDiscountMobile.textContent = formatRupiah(discount);
         cartTotalMobile.textContent = formatRupiah(total);
 
         // Tambahkan event listener untuk tombol quantity di mobile
@@ -1918,6 +1994,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const successModal = document.getElementById('success-modal');
             successModal?.classList.remove('active');
             document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Add event listener for the back to cashier button
+    const backToCashierBtn = document.getElementById('back-to-cashier-btn');
+
+    if (backToCashierBtn) {
+        backToCashierBtn.addEventListener('click', () => {
+            // Return to cashier page
+            const cartPage = document.getElementById('keranjang-mobile-page');
+            const cashierPage = document.getElementById('kasir-page');
+            const navItems = document.querySelectorAll('.nav-item');
+
+            if (cartPage && cashierPage) {
+                // Hide cart page and show cashier page
+                cartPage.classList.remove('active');
+                cashierPage.classList.add('active');
+
+                // Update navigation active states
+                navItems.forEach(item => {
+                    if (item.getAttribute('data-page') === 'kasir-page') {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
         });
     }
 });

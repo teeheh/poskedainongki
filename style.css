@@ -282,6 +282,28 @@ body {
     }
 }
 
+/* Mobile responsive adjustments for cashier page */
+@media (max-width: 768px) {
+    .kasir-layout {
+        flex-direction: column;
+    }
+    
+    .product-grid-container {
+        flex: 1;
+    }
+    
+    .cart-container {
+        display: none; /* Hide cart on mobile in cashier page */
+        order: -1; /* Move cart above products when visible */
+        margin-bottom: var(--spacing-lg);
+    }
+}
+
+/* Ensure cart page shows correctly on mobile */
+#keranjang-mobile-page .keranjang-mobile-container {
+    display: block;
+}
+
 .header h1 {
     font-size: 1.2rem;
     display: flex;
@@ -1336,6 +1358,42 @@ body {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: bold;
+    pointer-events: none; /* Allow clicks to pass through to button */
+}
+
+/* Header layout for cart page */
+#keranjang-mobile-page .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--primary-color);
+    padding: 5px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-btn:hover {
+    background-color: #f1f3f5;
 }
 
 /* Keranjang Mobile Page */
