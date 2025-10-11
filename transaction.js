@@ -1,5 +1,5 @@
-// Fungsi untuk menyimpan transaksi
-function saveTransaction(transactionId, total, paymentMethod, items) {
+// Fungsi untuk menyimpan transaksi ke localStorage
+function saveTransactionToLocalStorage(transactionId, total, paymentMethod, items) {
     try {
         const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
         
@@ -9,11 +9,11 @@ function saveTransaction(transactionId, total, paymentMethod, items) {
             total: total,
             paymentMethod: paymentMethod ? paymentMethod.name : 'Tunai',
             status: 'Selesai',
-            items: items.map(item => ({
+            items: items && Array.isArray(items) && items.length > 0 ? items.map(item => ({
                 name: item.name,
                 price: item.price,
                 quantity: item.quantity
-            }))
+            })) : []
         };
         
         transactions.push(transaction);

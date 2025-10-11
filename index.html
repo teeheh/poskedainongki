@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="style.css">
 
 </head>
+
 <body>
     <!-- Halaman Login -->
     <div id="login-page" class="page active">
@@ -152,18 +154,18 @@
                             <input type="text" id="payment-search" placeholder="Cari metode pembayaran...">
                         </div>
                     </div>
-                    
+
                     <!-- Card view untuk metode pembayaran -->
                     <div class="payment-cards" id="payment-cards">
                         <!-- Data pembayaran akan dimuat di sini sebagai cards -->
                     </div>
-                    
+
                     <!-- Floating Action Button untuk tambah metode -->
                     <button class="floating-action-btn" id="add-payment-btn">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
-                
+
                 <div id="detail_transaksi-tab" class="tab-content">
                     <div class="tab-header">
                         <div class="search-box">
@@ -190,7 +192,7 @@
                             <!-- Data transaksi akan dimuat di sini -->
                         </tbody>
                     </table>
-                    
+
                     <!-- Modal Detail Transaksi -->
                     <div id="transaction-detail-modal" class="modal">
                         <div class="modal-content">
@@ -217,7 +219,7 @@
                                         <span id="detail-transaction-status" class="info-value"></span>
                                     </div>
                                 </div>
-                                
+
                                 <h4>Detail Item</h4>
                                 <div class="detail-table-container">
                                     <table class="detail-table">
@@ -237,7 +239,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 <div class="transaction-summary">
                                     <div class="summary-row">
                                         <span>Total:</span>
@@ -254,6 +256,26 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sukses Pembayaran -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pembayaran Berhasil!</h3>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle" style="color: var(--success-color); font-size: 4rem;"></i>
+                </div>
+                <div class="success-message" id="success-message">
+                    <!-- Success message will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-success-modal" class="btn primary-btn">OK</button>
             </div>
         </div>
     </div>
@@ -379,49 +401,57 @@
     <div id="checkout-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Proses Pembayaran</h3>
+                <h3>Pembayaran</h3>
                 <button class="close-btn" id="close-checkout-modal">&times;</button>
             </div>
             <div class="form-group">
-                <label>Total: <span id="checkout-total">Rp 0</span></label>
+                <label>Total Belanja</label>
+                <span id="checkout-total" class="total-amount">Rp 0</span>
             </div>
             <div class="form-group">
-                <label for="payment-method">Metode Pembayaran</label>
-                <select id="payment-method" class="form-control" required>
-                    <!-- Opsi pembayaran akan dimuat di sini -->
-                </select>
-            </div>
-            
-            <!-- Tombol Saran Pembayaran -->
-            <div class="form-group">
-                <label>Pilih Jumlah Pembayaran:</label>
-                <div class="payment-suggestions" id="payment-suggestions">
-                    <!-- Tombol saran akan dimuat di sini -->
+                <label>Metode Bayar</label>
+                <select id="payment-method" class="form-control" style="display:none;"></select>
+                <div class="payment-methods" id="payment-methods">
+                    <!-- Tombol metode pembayaran akan dimuat di sini -->
                 </div>
             </div>
-            
+
+
+            <!-- Pilihan Nominal Bayar (Text only) -->
             <div class="form-group">
-                <label for="amount-paid">Jumlah Bayar (Manual)</label>
-                <input type="number" id="amount-paid" class="form-control" placeholder="Masukkan jumlah manual">
-            </div>
-            
-            <!-- Hasil Pembayaran -->
-            <div class="payment-result" id="payment-result" style="display: none;">
-                <div class="form-group">
-                    <label>Kembalian: <span id="change-amount">Rp 0</span></label>
-                </div>
-                <div class="form-group" id="change-breakdown" style="display: none;">
-                    <label>Komposisi Kembalian:</label>
-                    <div id="change-composition" class="change-composition">
-                        <!-- Komposisi kembalian akan dimuat di sini -->
+                <label>Pilih Nominal Bayar</label>
+                <div class="payment-amount-options-container">
+                    <div class="payment-amount-options" id="payment-amount-options">
+                        <!-- Opsi nominal bayar dalam bentuk text akan dimuat di sini -->
+                    </div>
+                    <div class="payment-amount-options-more" id="payment-amount-options-more" style="display: none;">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" id="more-options-btn">... <i class="fas fa-chevron-down"></i></button>
+                            <div class="dropdown-content" id="more-options-content">
+                                <!-- Opsi tambahan akan dimuat di sini -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="amount-paid">Nominal Lain</label>
+                <input type="number" id="amount-paid" class="form-control" placeholder="14000">
+            </div>
+
+            <!-- Hasil Pembayaran -->
+            <div class="payment-result" id="payment-result" style="display: none;">
+                <div class="change-info">
+                    <label>Kembalian:</label>
+                    <span id="change-amount">Rp 0</span>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
                 <button type="button" class="btn btn-primary" id="confirm-payment">
-                    <span id="confirm-payment-text">Konfirmasi</span>
+                    <span id="confirm-payment-text">Bayar</span>
                 </button>
             </div>
         </div>
@@ -491,4 +521,5 @@
     <script src="app.js"></script>
     <script src="transaction.js"></script>
 </body>
+
 </html>
