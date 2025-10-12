@@ -1576,26 +1576,36 @@ document.addEventListener('DOMContentLoaded', () => {
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-
+            
             if (item.id === 'logout-btn') return;
-
+            
             const targetPage = item.getAttribute('data-page');
-
+            
             // Update navigasi aktif
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
-
+            
             // Tampilkan halaman yang sesuai
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
             document.getElementById(targetPage).classList.add('active');
-
+            
             // Update user info di halaman keranjang mobile
             if (targetPage === 'keranjang-mobile-page' && currentUser) {
                 userAvatarKeranjang.textContent = currentUser.avatar;
                 userNameKeranjang.textContent = currentUser.name;
                 updateMobileCart();
+            }
+            
+            // Special handling for pengaturan page to maintain active tab
+            if (targetPage === 'pengaturan-page') {
+                // Show default tab (produk) if no active tab is found
+                const activeTab = document.querySelector('.tab-content.active');
+                if (!activeTab) {
+                    document.querySelector('.tab-content').classList.add('active');
+                    document.querySelector('.tab-btn').classList.add('active');
+                }
             }
         });
     });
@@ -1676,6 +1686,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 content.classList.remove('active');
             });
             document.getElementById(`${targetTab}-tab`).classList.add('active');
+            
+            // Ensure pengaturan page remains active in bottom nav
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(nav => {
+                if (nav.getAttribute('data-page') === 'pengaturan-page') {
+                    nav.classList.add('active');
+                } else {
+                    nav.classList.remove('active');
+                }
+            });
         });
     });
 

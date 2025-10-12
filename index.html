@@ -94,9 +94,6 @@
 
                 <div id="produk-tab" class="tab-content active">
                     <div class="tab-header">
-                        <button class="add-btn" id="add-product-btn">
-                            <i class="fas fa-plus"></i> Tambah Produk
-                        </button>
                         <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" id="product-search" placeholder="Cari produk...">
@@ -116,13 +113,15 @@
                             <!-- Data produk akan dimuat di sini -->
                         </tbody>
                     </table>
+                    
+                    <!-- Floating Action Button untuk tambah produk -->
+                    <button class="floating-action-btn" id="add-product-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
 
                 <div id="kategori-tab" class="tab-content">
                     <div class="tab-header">
-                        <button class="add-btn" id="add-category-btn">
-                            <i class="fas fa-plus"></i> Tambah Kategori
-                        </button>
                         <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" id="category-search" placeholder="Cari kategori...">
@@ -141,6 +140,11 @@
                             <!-- Data kategori akan dimuat di sini -->
                         </tbody>
                     </table>
+                    
+                    <!-- Floating Action Button untuk tambah kategori -->
+                    <button class="floating-action-btn" id="add-category-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
 
                 <div id="pembayaran-tab" class="tab-content">
@@ -197,57 +201,41 @@
                                 <span class="close-modal" id="close-transaction-detail">&times;</span>
                             </div>
                             <div class="modal-body">
-                                <div class="transaction-info">
-                                    <div class="info-row">
-                                        <span class="info-label">ID Transaksi:</span>
-                                        <span id="detail-transaction-id" class="info-value"></span>
+                                <div class="transaction-summary-card">
+                                    <div class="summary-item">
+                                        <span class="summary-label">ID Transaksi:</span>
+                                        <span id="detail-transaction-id" class="summary-value"></span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Tanggal:</span>
-                                        <span id="detail-transaction-date" class="info-value"></span>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Tanggal:</span>
+                                        <span id="detail-transaction-date" class="summary-value"></span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Metode Pembayaran:</span>
-                                        <span id="detail-payment-method" class="info-value"></span>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Metode Bayar:</span>
+                                        <span id="detail-payment-method" class="summary-value"></span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Status:</span>
-                                        <span id="detail-transaction-status" class="info-value"></span>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Status:</span>
+                                        <span id="detail-transaction-status" class="summary-value status-badge active"></span>
+                                    </div>
+                                    <div class="summary-item total-item">
+                                        <span class="summary-label">Total:</span>
+                                        <span id="detail-transaction-total" class="summary-value total-value"></span>
                                     </div>
                                 </div>
-
-                                <h4>Detail Item</h4>
-                                <div class="detail-table-container">
-                                    <table class="detail-table">
-                                        <thead>
-                                            <tr>
-                                                <th>ID Detail</th>
-                                                <th>ID Produk</th>
-                                                <th>Nama Produk</th>
-                                                <th>Harga Satuan</th>
-                                                <th>Kuantitas</th>
-                                                <th>Total Item</th>
-                                                <th>Catatan Item</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="transaction-items-body">
-                                            <!-- Detail item transaksi akan dimuat di sini -->
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div class="transaction-summary">
-                                    <div class="summary-row">
-                                        <span>Total:</span>
-                                        <span id="detail-transaction-total"></span>
+                                
+                                <h4 class="detail-section-title">Detail Item</h4>
+                                <div class="detail-items-container">
+                                    <div class="detail-items-list" id="transaction-items-body">
+                                        <!-- Detail item transaksi akan dimuat di sini -->
                                     </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button id="print-transaction-detail" class="btn primary-btn">
+                                <button id="print-transaction-detail" class="btn btn-primary">
                                     <i class="fas fa-print"></i> Cetak
                                 </button>
-                                <button id="close-detail-btn" class="btn secondary-btn">Tutup</button>
+                                <button id="close-detail-btn" class="btn btn-secondary">Tutup</button>
                             </div>
                         </div>
                     </div>

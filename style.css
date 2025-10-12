@@ -30,7 +30,6 @@ body {
     background-color: #f8f9fa; /* Lebih terang dari sebelumnya */
     color: var(--dark-color);
     min-height: 100vh;
-    padding-bottom: 70px; /* Untuk bottom navbar */
     line-height: 1.5;
 }
 
@@ -195,8 +194,8 @@ body {
 /* Floating Action Button */
 .floating-action-btn {
     position: fixed;
-    bottom: 70px;
-    right: var(--spacing-md);
+    bottom: 80px; /* Increased distance from bottom to avoid overlap with bottom nav */
+    right: 20px;  /* Consistent right margin */
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -209,7 +208,7 @@ body {
     justify-content: center;
     font-size: 1.5rem;
     cursor: pointer;
-    z-index: 1000;
+    z-index: 1000; /* Higher z-index to ensure it stays above other elements */
     transition: var(--transition);
 }
 
@@ -498,9 +497,18 @@ body {
 
 .category-list {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Change from wrap to nowrap for horizontal layout */
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
+    overflow-x: auto; /* Enable horizontal scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    padding-bottom: 4px; /* Add slight padding to indicate scrollability */
+}
+
+/* Hide scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+.category-list::-webkit-scrollbar {
+    display: none;
 }
 
 .category-btn {
@@ -511,6 +519,8 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     font-size: 0.9rem;
+    flex: 0 0 auto; /* Prevent buttons from shrinking */
+    white-space: nowrap; /* Prevent text from wrapping */
 }
 
 .category-btn.active {
@@ -672,11 +682,13 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     margin-left: var(--spacing-md);
+    flex-shrink: 0; /* Prevent filter box from shrinking */
 }
 
 .filter-box label {
     font-size: 0.9rem;
     color: #555;
+    white-space: nowrap; /* Prevent label from wrapping */
 }
 
 .filter-box input[type="date"] {
@@ -686,44 +698,151 @@ body {
     font-size: 0.9rem;
 }
 
-/* Styling untuk modal detail transaksi */
-.transaction-info {
-    background-color: #f8f9fa;
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-lg);
-}
-
-.info-row {
+/* Consistent tab header layout */
+.tab-header {
     display: flex;
-    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
 }
 
-.info-label {
+@media (min-width: 768px) {
+    .tab-header {
+        flex-wrap: nowrap;
+    }
+}
+
+/* Styling untuk modal detail transaksi */
+.transaction-summary-card {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid #f1f3f4;
+    align-items: center;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
     font-weight: 500;
-    width: 150px;
-    flex-shrink: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.total-item {
+    padding-top: var(--spacing-sm);
+    border-top: 2px solid #e9ecef;
+    margin-top: var(--spacing-xs);
+    font-weight: 700;
+}
+
+.total-value {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.detail-section-title {
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.detail-items-container {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.detail-items-list {
+    max-height: 40vh; /* Limit height with scroll */
+    overflow-y: auto;
+}
+
+.detail-item-row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid #f1f3f4;
+    align-items: center;
+}
+
+.detail-item-row:last-child {
+    border-bottom: none;
+}
+
+.detail-item-name {
+    flex: 1;
+    min-width: 150px;
+    font-weight: 500;
+}
+
+.detail-item-quantity {
+    flex: 0 0 auto;
+    padding: 0 var(--spacing-sm);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.detail-item-price {
+    flex: 0 0 auto;
+    text-align: right;
+    font-weight: 600;
+    color: var(--dark-color);
+    min-width: 80px;
 }
 
 /* Responsivitas mobile untuk detail transaksi */
 @media (max-width: 768px) {
-    .transaction-info {
+    .summary-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+    
+    .summary-label {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .transaction-summary-card {
         padding: var(--spacing-sm);
     }
     
-    .info-row {
+    .detail-item-row {
         flex-direction: column;
-        margin-bottom: var(--spacing-sm);
+        align-items: flex-start;
+        gap: var(--spacing-xs);
     }
     
-    .info-label {
-        width: 100%;
-        margin-bottom: 4px;
+    .detail-item-quantity, 
+    .detail-item-price {
+        align-self: flex-end;
     }
     
-    .detail-table th, .detail-table td {
-        padding: 8px 5px;
-        font-size: 0.85rem;
+    .detail-items-list {
+        max-height: 50vh;
     }
     
     .modal-content {
@@ -731,10 +850,24 @@ body {
         max-height: 90vh;
         overflow-y: auto;
     }
-    
-    .detail-table-container {
-        margin: 0 calc(-1 * var(--spacing-md));
-    }
+}
+
+/* Status badge styling */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background-color: #e3fcef;
+    color: #0ca678;
+}
+
+.status-badge.inactive {
+    background-color: #f1f3f5;
+    color: #868e96;
 }
 
 .product-image {
@@ -887,9 +1020,13 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     padding: var(--spacing-lg);
+    position: -webkit-sticky; /* For Safari */
     position: sticky;
     top: 20px;
     width: 30%; /* Memperkecil lebar kolom keranjang */
+    max-height: calc(100vh - 40px); /* Prevents overflow */
+    overflow-y: auto; /* Allows scrolling within cart if needed */
+    z-index: 10; /* Ensures cart stays above other elements */
 }
 
 .cart-header {
@@ -1043,8 +1180,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-lg);
-    gap: var(--spacing-md);
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+/* Consistent layout for search and filter container */
+.search-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .search-container {
+        flex-wrap: nowrap;
+    }
 }
 
 .search-box {
@@ -1318,7 +1469,7 @@ body {
     display: flex;
     justify-content: space-around;
     padding: 10px 0;
-    z-index: 100;
+    z-index: 1000; /* Increased z-index to ensure it stays on top */
 }
 
 .nav-item {
@@ -1332,6 +1483,7 @@ body {
     padding: 5px 10px;
     border-radius: var(--border-radius);
     position: relative;
+    min-width: 60px; /* Ensure items have minimum width */
 }
 
 .nav-item.active {
@@ -1341,6 +1493,17 @@ body {
 .nav-icon {
     font-size: 1.2rem;
     margin-bottom: 3px;
+}
+
+/* Ensure page content doesn't get covered by bottom-nav on mobile */
+.page {
+    padding-bottom: 70px; /* Height of bottom navigation */
+}
+
+/* Specific fix for pengaturan page to ensure bottom-nav stays visible */
+#pengaturan-page {
+    padding-bottom: 70px;
+    margin-bottom: 0;
 }
 
 /* Cart Badge */
