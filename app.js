@@ -9,6 +9,10 @@ const CONFIG = {
     scope: 'https://www.googleapis.com/auth/spreadsheets',
 };
 
+// Session management constants
+const SESSION_STORAGE_KEY = 'pos_session_data';
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 // Data Aplikasi
 let products = [];
 let categories = [];
@@ -481,6 +485,9 @@ function maybeEnableButtons() {
     if (gapiInited && gisInited) {
         loginBtn.disabled = false;
         loginStatus.textContent = 'Aplikasi siap. Silakan login.';
+        
+        // Check for saved session when APIs are ready
+        restoreSession();
     }
 }
 
@@ -518,6 +525,9 @@ function handleAuthClick() {
 
         // Tampilkan navbar setelah login berhasil
         document.querySelector('.bottom-nav').style.display = 'flex';
+
+        // Save session data to localStorage
+        saveSessionData(currentUser);
 
         loginStatus.textContent = '';
     };
@@ -561,6 +571,9 @@ function handleSignout() {
 
         // Sembunyikan navbar di halaman login
         document.querySelector('.bottom-nav').style.display = 'none';
+
+        // Clear session data from localStorage
+        clearSessionData();
 
         loginStatus.textContent = 'Anda telah logout.';
     }
@@ -1678,6 +1691,11 @@ async function processPayment() {
         // Reset keranjang
         cart = [];
         renderCart();
+        
+        // Update session data since cart has changed
+        if (currentUser) {
+            saveSessionData(currentUser);
+        }
 
         // Tutup checkout modal
         checkoutModal.classList.remove('active');
@@ -1691,12 +1709,12 @@ async function processPayment() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Sembunyikan bottom navigation saat pertama kali dimuat (login page)
-    document.querySelector('.bottom-nav').style.display = 'none';
-
-    // Inisialisasi Google API
+    // Inisialisasi Google API first
     gapiLoaded();
     gisLoaded();
+
+    // Sembunyikan bottom navigation saat pertama kali dimuat (login page)
+    document.querySelector('.bottom-nav').style.display = 'none';
 
     // Login dengan Google
     loginBtn.addEventListener('click', handleAuthClick);
@@ -2407,6 +2425,164 @@ function updateButtonSelections(formType, data) {
 
 // Konfirmasi pembayaran
 confirmPaymentBtn.addEventListener('click', processPayment);
+
+// Save session data to localStorage
+function saveSessionData(userData) {
+    const sessionData = {
+        user: userData,
+        timestamp: Date.now(),
+        cart: cart // Save cart data as well
+    };
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+}
+
+// Load session data from localStorage
+function loadSessionData() {
+    const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (sessionData) {
+        try {
+            const parsedData = JSON.parse(sessionData);
+            // Check if session is still valid (not expired)
+            if (Date.now() - parsedData.timestamp < SESSION_TIMEOUT) {
+                return parsedData;
+            } else {
+                // Session expired, remove it
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+                return null;
+            }
+        } catch (e) {
+            console.error('Error parsing session data:', e);
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return null;
+        }
+    }
+    return null;
+}
+
+// Clear session data from localStorage
+function clearSessionData() {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+// Restore session if available
+async function restoreSession() {
+    const sessionData = loadSessionData();
+    if (sessionData) {
+        // Check if Google API is ready before proceeding
+        if (!gapiInited || !gisInited) {
+            console.log('Google API not ready, initializing...');
+            // Wait a bit for API initialization
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check again after delay
+            if (!gapiInited || !gisInited) {
+                console.log('Google API still not ready, showing login page');
+                return false;
+            }
+        }
+        
+        // Temporarily set user data to update UI
+        currentUser = sessionData.user;
+        
+        // Update UI with user information
+        if (currentUser) {
+            userAvatar.textContent = currentUser.avatar;
+            userName.textContent = currentUser.name;
+            userAvatarSettings.textContent = currentUser.avatar;
+            userNameSettings.textContent = currentUser.name;
+        }
+        
+        // Restore cart data
+        if (sessionData.cart) {
+            cart = sessionData.cart;
+        }
+        
+        try {
+            // Check if we have a valid Google token before attempting to load data
+            const token = gapi.client.getToken();
+            if (!token) {
+                // No token available, clear session and show login
+                clearSessionData();
+                currentUser = null;
+                
+                // Show login page
+                loginPage.classList.add('active');
+                kasirPage.classList.remove('active');
+                pengaturanPage.classList.remove('active');
+                keranjangMobilePage.classList.remove('active');
+                
+                // Hide the bottom navigation
+                document.querySelector('.bottom-nav').style.display = 'none';
+                
+                loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
+                return false;
+            }
+            
+            // Try to load all data
+            await loadAllData();
+            
+            // If data loading succeeds, show the main application pages
+            loginPage.classList.remove('active');
+            kasirPage.classList.add('active');
+            
+            // Show the bottom navigation
+            document.querySelector('.bottom-nav').style.display = 'flex';
+            
+            // Render cart if it exists
+            renderCart();
+            
+            console.log('Session restored successfully');
+            return true;
+        } catch (error) {
+            console.error('Error restoring session data:', error);
+            
+            // Check if this is a Google API authentication error
+            const isAuthError = error.status === 403 || 
+                               error.result?.error?.code === 403 || 
+                               error.body?.includes('PERMISSION_DENIED') ||
+                               error.message?.includes('PERMISSION_DENIED');
+            
+            if (isAuthError) {
+                // Clear the Google token and session data
+                const token = gapi.client.getToken();
+                if (token) {
+                    google.accounts.oauth2.revoke(token.access_token);
+                    gapi.client.setToken('');
+                }
+                
+                clearSessionData();
+                currentUser = null;
+                
+                // Show login page
+                loginPage.classList.add('active');
+                kasirPage.classList.remove('active');
+                pengaturanPage.classList.remove('active');
+                keranjangMobilePage.classList.remove('active');
+                
+                // Hide the bottom navigation
+                document.querySelector('.bottom-nav').style.display = 'none';
+                
+                loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
+                return false;
+            }
+            
+            // For other errors, show the UI but indicate that data couldn't be loaded
+            // Show the main application pages but with error message
+            loginPage.classList.remove('active');
+            kasirPage.classList.add('active');
+            
+            // Show the bottom navigation
+            document.querySelector('.bottom-nav').style.display = 'flex';
+            
+            // Render cart if it exists
+            renderCart();
+            
+            loginStatus.textContent = 'Peringatan: Data tidak dapat dimuat. Silakan refresh halaman atau login kembali.';
+            return true;
+        }
+    }
+    return false;
+}
 
 // Manual payment input
 amountPaidInput.addEventListener('input', (e) => {
