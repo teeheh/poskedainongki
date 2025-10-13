@@ -1267,6 +1267,11 @@ function renderPaymentTable() {
 // Isi Select Kategori
 function populateCategorySelect() {
     productCategorySelect.innerHTML = '';
+    const categoryButtonsContainer = document.getElementById('product-category-buttons');
+    
+    if (categoryButtonsContainer) {
+        categoryButtonsContainer.innerHTML = '';
+    }
 
     categories
         .filter(cat => cat.status === 'Aktif')
@@ -1275,7 +1280,84 @@ function populateCategorySelect() {
             option.value = category.id;
             option.textContent = category.name;
             productCategorySelect.appendChild(option);
+            
+            // Also create a button for this category
+            if (categoryButtonsContainer) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'select-button';
+                button.textContent = category.name;
+                button.dataset.value = category.id;
+                // Store category ID in a variable to ensure closure captures the right value
+                const catId = category.id;
+                button.addEventListener('click', function() {
+                    // Remove selected class from all buttons
+                    categoryButtonsContainer.querySelectorAll('.select-button').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    // Update the hidden select element
+                    productCategorySelect.value = catId;
+                });
+                categoryButtonsContainer.appendChild(button);
+            }
         });
+        
+    // Reinitialize the select button system to ensure all event listeners work properly
+    initializeCategoryButtons();
+}
+
+// Function to handle category button selection specifically
+function initializeCategoryButtons() {
+    const categoryButtons = document.querySelectorAll('#product-category-buttons .select-button');
+    
+    // Remove any existing listeners to prevent duplicates
+    categoryButtons.forEach(button => {
+        // Create a new button with same properties to clear event listeners
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+    
+    // Add fresh event listeners to the new buttons
+    const freshButtons = document.querySelectorAll('#product-category-buttons .select-button');
+    freshButtons.forEach(button => {
+        const catId = button.dataset.value;
+        button.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            freshButtons.forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            // Update the hidden select element
+            document.getElementById('product-category').value = catId;
+        });
+    });
+}
+
+// Function to update category button selection based on value
+function updateCategoryButtonSelection(value) {
+    const categoryButtonsContainer = document.getElementById('product-category-buttons');
+    if (!categoryButtonsContainer) return;
+    
+    const allButtons = categoryButtonsContainer.querySelectorAll('.select-button');
+    
+    // Remove selected class from all buttons
+    allButtons.forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Find and select the button with matching value
+    allButtons.forEach(btn => {
+        if (btn.dataset.value === value) {
+            btn.classList.add('selected');
+        }
+    });
+    
+    // Also update the hidden select
+    const productCategorySelect = document.getElementById('product-category');
+    productCategorySelect.value = value;
 }
 
 // Isi Select Metode Pembayaran
@@ -1301,7 +1383,22 @@ function addProduct() {
     document.getElementById('product-description').value = '';
     document.getElementById('product-image').value = '';
     document.getElementById('product-status').value = 'Aktif';
-
+    
+    // Reset button selections for the add form
+    const categoryButtons = document.querySelectorAll('#product-category-buttons .select-button');
+    categoryButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    const productStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
+    productStatusButtons.forEach(btn => {
+        btn.classList.remove('aktif', 'nonaktif');
+        if (btn.dataset.value === 'Aktif') {
+            btn.classList.add('aktif');
+        }
+    });
+    
+    // Clear the category selection in hidden select
+    document.getElementById('product-category').value = '';
+    
     productModal.classList.add('active');
     productForm.dataset.editingId = '';
 }
@@ -1316,9 +1413,17 @@ function editProduct(id) {
     document.getElementById('product-price').value = product.price;
     document.getElementById('product-description').value = product.description || '';
     document.getElementById('product-image').value = product.image || '';
+    
+    // Set status
     document.getElementById('product-status').value = product.status;
+    
+    // Update the buttons to reflect the current values
+    updateButtonSelections('product', product);
+    
+    // Update category button selection specifically
+    updateCategoryButtonSelection(product.category);
 
-    // Set kategori
+    // Set kategori in hidden select
     setTimeout(() => {
         document.getElementById('product-category').value = product.category;
     }, 0);
@@ -1351,6 +1456,15 @@ function addCategory() {
     document.getElementById('category-name').value = '';
     document.getElementById('category-order').value = '';
     document.getElementById('category-status').value = 'Aktif';
+    
+    // Reset button selections for the add form
+    const categoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
+    categoryStatusButtons.forEach(btn => {
+        btn.classList.remove('aktif', 'nonaktif');
+        if (btn.dataset.value === 'Aktif') {
+            btn.classList.add('aktif');
+        }
+    });
 
     categoryModal.classList.add('active');
     categoryForm.dataset.editingId = '';
@@ -1365,6 +1479,9 @@ function editCategory(id) {
     document.getElementById('category-name').value = category.name;
     document.getElementById('category-order').value = category.order;
     document.getElementById('category-status').value = category.status;
+    
+    // Update the buttons to reflect the current values
+    updateButtonSelections('category', category);
 
     categoryModal.classList.add('active');
 
@@ -1402,6 +1519,23 @@ function addPaymentMethod() {
     document.getElementById('payment-name').value = '';
     document.getElementById('payment-type').value = 'Tunai';
     document.getElementById('payment-status').value = 'Aktif';
+    
+    // Reset button selections for the add form
+    const paymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
+    paymentTypeButtons.forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.dataset.value === 'Tunai') {
+            btn.classList.add('selected');
+        }
+    });
+    
+    const paymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
+    paymentStatusButtons.forEach(btn => {
+        btn.classList.remove('aktif', 'nonaktif');
+        if (btn.dataset.value === 'Aktif') {
+            btn.classList.add('aktif');
+        }
+    });
 
     paymentModal.classList.add('active');
     paymentForm.dataset.editingId = '';
@@ -1416,6 +1550,9 @@ function editPaymentMethod(id) {
     document.getElementById('payment-name').value = method.name;
     document.getElementById('payment-type').value = method.type;
     document.getElementById('payment-status').value = method.status;
+    
+    // Update the buttons to reflect the current values
+    updateButtonSelections('payment', method);
 
     paymentModal.classList.add('active');
 
@@ -1576,28 +1713,28 @@ document.addEventListener('DOMContentLoaded', () => {
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            
+
             if (item.id === 'logout-btn') return;
-            
+
             const targetPage = item.getAttribute('data-page');
-            
+
             // Update navigasi aktif
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
-            
+
             // Tampilkan halaman yang sesuai
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
             document.getElementById(targetPage).classList.add('active');
-            
+
             // Update user info di halaman keranjang mobile
             if (targetPage === 'keranjang-mobile-page' && currentUser) {
                 userAvatarKeranjang.textContent = currentUser.avatar;
                 userNameKeranjang.textContent = currentUser.name;
                 updateMobileCart();
             }
-            
+
             // Special handling for pengaturan page to maintain active tab
             if (targetPage === 'pengaturan-page') {
                 // Show default tab (produk) if no active tab is found
@@ -1686,7 +1823,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 content.classList.remove('active');
             });
             document.getElementById(`${targetTab}-tab`).classList.add('active');
-            
+
             // Ensure pengaturan page remains active in bottom nav
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(nav => {
@@ -2043,6 +2180,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // Initialize button-based selections
+    initializeSelectButtons();
 });
 
 // Search filter function
@@ -2074,6 +2214,195 @@ function filterTable(tableBodyId, searchTerm, searchColumns) {
 
         row.style.display = shouldShow ? '' : 'none';
     });
+}
+
+// Function to initialize button-based selections
+function initializeSelectButtons() {
+    // Initialize status buttons for product modal
+    const productStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
+    productStatusButtons.forEach(button => {
+        // Remove existing listeners to prevent duplication
+        if (button.parentNode) {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+        }
+    });
+
+    // Reattach event listeners to the new buttons
+    const newProductStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
+    newProductStatusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            const allButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
+            allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
+            // Add appropriate class based on selection
+            if (this.dataset.value === 'Aktif') {
+                this.classList.add('aktif');
+            } else {
+                this.classList.add('nonaktif');
+            }
+            // Update the hidden select element
+            document.getElementById('product-status').value = this.dataset.value;
+        });
+    });
+
+    // Initialize status buttons for category modal
+    const categoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
+    categoryStatusButtons.forEach(button => {
+        // Remove existing listeners to prevent duplication
+        if (button.parentNode) {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+        }
+    });
+
+    // Reattach event listeners to the new buttons
+    const newCategoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
+    newCategoryStatusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            const allButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
+            allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
+            // Add appropriate class based on selection
+            if (this.dataset.value === 'Aktif') {
+                this.classList.add('aktif');
+            } else {
+                this.classList.add('nonaktif');
+            }
+            // Update the hidden select element
+            document.getElementById('category-status').value = this.dataset.value;
+        });
+    });
+
+    // Initialize type buttons for payment modal
+    const paymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
+    paymentTypeButtons.forEach(button => {
+        // Remove existing listeners to prevent duplication
+        if (button.parentNode) {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+        }
+    });
+
+    // Reattach event listeners to the new buttons
+    const newPaymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
+    newPaymentTypeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            const allButtons = document.querySelectorAll('#payment-type-buttons .select-button');
+            allButtons.forEach(btn => btn.classList.remove('selected'));
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            // Update the hidden select element
+            document.getElementById('payment-type').value = this.dataset.value;
+        });
+    });
+
+    // Initialize status buttons for payment modal
+    const paymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
+    paymentStatusButtons.forEach(button => {
+        // Remove existing listeners to prevent duplication
+        if (button.parentNode) {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+        }
+    });
+
+    // Reattach event listeners to the new buttons
+    const newPaymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
+    newPaymentStatusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove selected class from all buttons
+            const allButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
+            allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
+            // Add appropriate class based on selection
+            if (this.dataset.value === 'Aktif') {
+                this.classList.add('aktif');
+            } else {
+                this.classList.add('nonaktif');
+            }
+            // Update the hidden select element
+            document.getElementById('payment-status').value = this.dataset.value;
+        });
+    });
+}
+
+// Function to update button selections when loading edit forms
+function updateButtonSelections(formType, data) {
+    switch(formType) {
+        case 'product':
+            // Update category selection - use the dedicated function
+            if (data.category) {
+                updateCategoryButtonSelection(data.category);
+            }
+            
+            // Update status selection
+            const productStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
+            productStatusButtons.forEach(button => {
+                if (button.dataset.value === data.status) {
+                    if (data.status === 'Aktif') {
+                        button.classList.add('aktif');
+                        button.classList.remove('nonaktif');
+                    } else {
+                        button.classList.add('nonaktif');
+                        button.classList.remove('aktif');
+                    }
+                    document.getElementById('product-status').value = data.status;
+                } else {
+                    button.classList.remove('aktif', 'nonaktif');
+                }
+            });
+            break;
+            
+        case 'category':
+            // Update category status selection
+            const categoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
+            categoryStatusButtons.forEach(button => {
+                if (button.dataset.value === data.status) {
+                    if (data.status === 'Aktif') {
+                        button.classList.add('aktif');
+                        button.classList.remove('nonaktif');
+                    } else {
+                        button.classList.add('nonaktif');
+                        button.classList.remove('aktif');
+                    }
+                    document.getElementById('category-status').value = data.status;
+                } else {
+                    button.classList.remove('aktif', 'nonaktif');
+                }
+            });
+            break;
+            
+        case 'payment':
+            // Update payment type selection
+            const paymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
+            paymentTypeButtons.forEach(button => {
+                if (button.dataset.value === data.type) {
+                    button.classList.add('selected');
+                    document.getElementById('payment-type').value = data.type;
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+            
+            // Update payment status selection
+            const paymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
+            paymentStatusButtons.forEach(button => {
+                if (button.dataset.value === data.status) {
+                    if (data.status === 'Aktif') {
+                        button.classList.add('aktif');
+                        button.classList.remove('nonaktif');
+                    } else {
+                        button.classList.add('nonaktif');
+                        button.classList.remove('aktif');
+                    }
+                    document.getElementById('payment-status').value = data.status;
+                } else {
+                    button.classList.remove('aktif', 'nonaktif');
+                }
+            });
+            break;
+    }
 }
 
 // Konfirmasi pembayaran

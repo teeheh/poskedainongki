@@ -1,9 +1,13 @@
 /* Reset dan Variabel */
 :root {
-    --primary-color: #00a8cc; /* Warna biru teal modern menggantikan biru tua */
-    --secondary-color: #f8f9fa; /* Warna sekunder yang lebih terang */
-    --accent-color: #ff9f43; /* Tetap menggunakan oranye tetapi lebih cerah */
-    --light-color: #ffffff; /* Putih bersih untuk latar belakang */
+    --primary-color: #00a8cc;
+    /* Warna biru teal modern menggantikan biru tua */
+    --secondary-color: #f8f9fa;
+    /* Warna sekunder yang lebih terang */
+    --accent-color: #ff9f43;
+    /* Tetap menggunakan oranye tetapi lebih cerah */
+    --light-color: #ffffff;
+    /* Putih bersih untuk latar belakang */
     --dark-color: #343a40;
     --success-color: #28a745;
     --danger-color: #dc3545;
@@ -27,7 +31,8 @@
 }
 
 body {
-    background-color: #f8f9fa; /* Lebih terang dari sebelumnya */
+    background-color: #f8f9fa;
+    /* Lebih terang dari sebelumnya */
     color: var(--dark-color);
     min-height: 100vh;
     line-height: 1.5;
@@ -194,8 +199,10 @@ body {
 /* Floating Action Button */
 .floating-action-btn {
     position: fixed;
-    bottom: 80px; /* Increased distance from bottom to avoid overlap with bottom nav */
-    right: 20px;  /* Consistent right margin */
+    bottom: 80px;
+    /* Increased distance from bottom to avoid overlap with bottom nav */
+    right: 20px;
+    /* Consistent right margin */
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -208,7 +215,8 @@ body {
     justify-content: center;
     font-size: 1.5rem;
     cursor: pointer;
-    z-index: 1000; /* Higher z-index to ensure it stays above other elements */
+    z-index: 1000;
+    /* Higher z-index to ensure it stays above other elements */
     transition: var(--transition);
 }
 
@@ -222,52 +230,53 @@ body {
     .header {
         padding: var(--spacing-sm);
     }
-    
+
     .header h1 {
         font-size: 1.1rem;
     }
-    
+
     .user-info span {
         font-size: 0.9rem;
     }
-    
+
     .tab-btn {
         padding: 8px 12px;
         font-size: 0.9rem;
     }
-    
+
     .search-box input {
         padding: 8px 30px;
         font-size: 0.9rem;
     }
-    
+
     .payment-cards {
         grid-template-columns: 1fr;
     }
-    
+
     /* Increase icon sizes for better touch targets */
-    .fas, .far {
+    .fas,
+    .far {
         font-size: 1.2rem;
     }
-    
+
     /* Improve bottom navigation */
     .bottom-nav {
         padding: var(--spacing-sm) 0;
     }
-    
+
     .nav-item {
         padding: var(--spacing-xs) 0;
     }
-    
+
     .nav-item i {
         font-size: 1.4rem;
     }
-    
+
     .nav-item.active {
         color: var(--accent-color);
         position: relative;
     }
-    
+
     .nav-item.active::after {
         content: '';
         position: absolute;
@@ -286,14 +295,16 @@ body {
     .kasir-layout {
         flex-direction: column;
     }
-    
+
     .product-grid-container {
         flex: 1;
     }
-    
+
     .cart-container {
-        display: none; /* Hide cart on mobile in cashier page */
-        order: -1; /* Move cart above products when visible */
+        display: none;
+        /* Hide cart on mobile in cashier page */
+        order: -1;
+        /* Move cart above products when visible */
         margin-bottom: var(--spacing-lg);
     }
 }
@@ -389,11 +400,11 @@ body {
     .kasir-layout {
         flex-direction: row;
     }
-    
+
     .product-grid-container {
         flex: 2;
     }
-    
+
     .cart-container {
         flex: 1;
     }
@@ -485,11 +496,11 @@ body {
     .kasir-layout {
         flex-direction: row;
     }
-    
+
     .product-grid-container {
         flex: 2;
     }
-    
+
     .cart-container {
         flex: 1;
     }
@@ -497,13 +508,18 @@ body {
 
 .category-list {
     display: flex;
-    flex-wrap: nowrap; /* Change from wrap to nowrap for horizontal layout */
+    flex-wrap: nowrap;
+    /* Change from wrap to nowrap for horizontal layout */
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
-    overflow-x: auto; /* Enable horizontal scrolling */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
-    padding-bottom: 4px; /* Add slight padding to indicate scrollability */
+    overflow-x: auto;
+    /* Enable horizontal scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    scrollbar-width: none;
+    /* Hide scrollbar for Firefox */
+    padding-bottom: 4px;
+    /* Add slight padding to indicate scrollability */
 }
 
 /* Hide scrollbar for Webkit browsers (Chrome, Safari, Edge) */
@@ -519,8 +535,10 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     font-size: 0.9rem;
-    flex: 0 0 auto; /* Prevent buttons from shrinking */
-    white-space: nowrap; /* Prevent text from wrapping */
+    flex: 0 0 auto;
+    /* Prevent buttons from shrinking */
+    white-space: nowrap;
+    /* Prevent text from wrapping */
 }
 
 .category-btn.active {
@@ -600,6 +618,7 @@ body {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -661,15 +680,15 @@ body {
     .modal {
         padding: var(--spacing-sm);
     }
-    
+
     .modal-content {
         max-width: 100%;
     }
-    
+
     .modal .form-actions {
         flex-direction: column;
     }
-    
+
     .modal .btn {
         width: 100%;
         margin-bottom: 5px;
@@ -682,13 +701,15 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     margin-left: var(--spacing-md);
-    flex-shrink: 0; /* Prevent filter box from shrinking */
+    flex-shrink: 0;
+    /* Prevent filter box from shrinking */
 }
 
 .filter-box label {
     font-size: 0.9rem;
     color: #555;
-    white-space: nowrap; /* Prevent label from wrapping */
+    white-space: nowrap;
+    /* Prevent label from wrapping */
 }
 
 .filter-box input[type="date"] {
@@ -721,7 +742,7 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .summary-item {
@@ -776,7 +797,8 @@ body {
 }
 
 .detail-items-list {
-    max-height: 40vh; /* Limit height with scroll */
+    max-height: 40vh;
+    /* Limit height with scroll */
     overflow-y: auto;
 }
 
@@ -820,31 +842,31 @@ body {
         align-items: flex-start;
         gap: var(--spacing-xs);
     }
-    
+
     .summary-label {
         font-weight: 600;
         color: var(--dark-color);
     }
-    
+
     .transaction-summary-card {
         padding: var(--spacing-sm);
     }
-    
+
     .detail-item-row {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--spacing-xs);
     }
-    
-    .detail-item-quantity, 
+
+    .detail-item-quantity,
     .detail-item-price {
         align-self: flex-end;
     }
-    
+
     .detail-items-list {
         max-height: 50vh;
     }
-    
+
     .modal-content {
         width: 95%;
         max-height: 90vh;
@@ -933,7 +955,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -943,7 +965,8 @@ body {
 }
 
 .product-image {
-    height: 150px; /* Ukuran yang konsisten */
+    height: 150px;
+    /* Ukuran yang konsisten */
     background-color: #f8f9fa;
     display: flex;
     align-items: center;
@@ -1005,7 +1028,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -1020,13 +1043,18 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     padding: var(--spacing-lg);
-    position: -webkit-sticky; /* For Safari */
+    position: -webkit-sticky;
+    /* For Safari */
     position: sticky;
     top: 20px;
-    width: 30%; /* Memperkecil lebar kolom keranjang */
-    max-height: calc(100vh - 40px); /* Prevents overflow */
-    overflow-y: auto; /* Allows scrolling within cart if needed */
-    z-index: 10; /* Ensures cart stays above other elements */
+    width: 30%;
+    /* Memperkecil lebar kolom keranjang */
+    max-height: calc(100vh - 40px);
+    /* Prevents overflow */
+    overflow-y: auto;
+    /* Allows scrolling within cart if needed */
+    z-index: 10;
+    /* Ensures cart stays above other elements */
 }
 
 .cart-header {
@@ -1161,11 +1189,13 @@ body {
     padding-bottom: var(--spacing-sm);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .pengaturan-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+    display: none;
+    /* Chrome, Safari, Edge */
 }
 
 .tab-content {
@@ -1250,19 +1280,19 @@ body {
     .data-table {
         border: none;
     }
-    
+
     .data-table thead {
         display: none;
     }
-    
+
     .data-table tbody tr {
         display: block;
         margin-bottom: var(--spacing-md);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         border-radius: var(--border-radius);
         background-color: white;
     }
-    
+
     .data-table td {
         display: flex;
         justify-content: space-between;
@@ -1270,11 +1300,11 @@ body {
         text-align: right;
         border-bottom: 1px solid #f0f0f0;
     }
-    
+
     .data-table td:last-child {
         border-bottom: none;
     }
-    
+
     .data-table td:before {
         content: attr(data-label);
         font-weight: 600;
@@ -1315,19 +1345,19 @@ body {
     .data-table {
         border: none;
     }
-    
+
     .data-table thead {
         display: none;
     }
-    
+
     .data-table tbody tr {
         display: block;
         margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         background-color: white;
     }
-    
+
     .data-table td {
         display: flex;
         justify-content: space-between;
@@ -1335,11 +1365,11 @@ body {
         text-align: right;
         border-bottom: 1px solid #f0f0f0;
     }
-    
+
     .data-table td:last-child {
         border-bottom: none;
     }
-    
+
     .data-table td:before {
         content: attr(data-label);
         font-weight: 600;
@@ -1469,7 +1499,8 @@ body {
     display: flex;
     justify-content: space-around;
     padding: 10px 0;
-    z-index: 1000; /* Increased z-index to ensure it stays on top */
+    z-index: 1000;
+    /* Increased z-index to ensure it stays on top */
 }
 
 .nav-item {
@@ -1483,7 +1514,8 @@ body {
     padding: 5px 10px;
     border-radius: var(--border-radius);
     position: relative;
-    min-width: 60px; /* Ensure items have minimum width */
+    min-width: 60px;
+    /* Ensure items have minimum width */
 }
 
 .nav-item.active {
@@ -1497,7 +1529,8 @@ body {
 
 /* Ensure page content doesn't get covered by bottom-nav on mobile */
 .page {
-    padding-bottom: 70px; /* Height of bottom navigation */
+    padding-bottom: 70px;
+    /* Height of bottom navigation */
 }
 
 /* Specific fix for pengaturan page to ensure bottom-nav stays visible */
@@ -1521,7 +1554,8 @@ body {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: bold;
-    pointer-events: none; /* Allow clicks to pass through to button */
+    pointer-events: none;
+    /* Allow clicks to pass through to button */
 }
 
 /* Header layout for cart page */
@@ -1582,20 +1616,27 @@ body {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(255,255,255,.3);
+    border: 3px solid rgba(255, 255, 255, .3);
     border-radius: 50%;
     border-top-color: #fff;
     animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Payment Suggestions */
@@ -1864,7 +1905,7 @@ body {
     position: absolute;
     background-color: white;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 1;
     border-radius: var(--border-radius);
     top: 100%;
@@ -1905,14 +1946,16 @@ body {
 /* Payment suggestions grid with consistent spacing */
 .payment-suggestions {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for better spacing */
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 columns for better spacing */
     gap: 10px;
     margin-bottom: 15px;
 }
 
 @media (min-width: 480px) {
     .payment-suggestions {
-        grid-template-columns: repeat(3, 1fr); /* 3 columns on larger screens */
+        grid-template-columns: repeat(3, 1fr);
+        /* 3 columns on larger screens */
     }
 }
 
@@ -1978,7 +2021,8 @@ body {
 }
 
 .btn {
-    padding: 12px 20px; /* Increased padding for better touch targets */
+    padding: 12px 20px;
+    /* Increased padding for better touch targets */
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
@@ -1991,13 +2035,15 @@ body {
 .btn-primary {
     background-color: var(--primary-color);
     color: white;
-    flex: 2; /* Make Confirm button wider */
+    flex: 2;
+    /* Make Confirm button wider */
 }
 
 .btn-secondary {
     background-color: #6c757d;
     color: white;
-    flex: 1; /* Make Cancel button narrower */
+    flex: 1;
+    /* Make Cancel button narrower */
 }
 
 /* Success Modal */
@@ -2221,7 +2267,12 @@ body {
 }
 
 /* Consistent Font Sizes */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 600;
 }
 
@@ -2276,7 +2327,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 10px;
 }
 
-.input-group > * {
+.input-group>* {
     flex: 1;
 }
 
@@ -2286,6 +2337,111 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
     margin-bottom: 15px;
+}
+
+/* Modern button styles for form selects */
+.select-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.select-button {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 15px;
+    border: 2px solid #dee2e6;
+    background-color: white;
+    color: var(--dark-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.select-button:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.select-button.selected {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 168, 204, 0.3);
+}
+
+.select-button.selected::after {
+    content: "✓";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary-color);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+/* Animation for selection */
+@keyframes selectAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.select-button.selected {
+    animation: selectAnimation 0.3s ease;
+}
+
+/* Status select buttons */
+.status-select-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.status-select-button {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    background-color: white;
+    color: var(--dark-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.status-select-button.aktif {
+    border-color: var(--success-color);
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-select-button.nonaktif {
+    border-color: var(--danger-color);
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Hide original select elements when buttons are present */
+.form-group select[hidden] {
+    display: none;
 }
 
 .payment-suggestion-btn {

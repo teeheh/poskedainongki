@@ -113,7 +113,7 @@
                             <!-- Data produk akan dimuat di sini -->
                         </tbody>
                     </table>
-                    
+
                     <!-- Floating Action Button untuk tambah produk -->
                     <button class="floating-action-btn" id="add-product-btn">
                         <i class="fas fa-plus"></i>
@@ -140,7 +140,7 @@
                             <!-- Data kategori akan dimuat di sini -->
                         </tbody>
                     </table>
-                    
+
                     <!-- Floating Action Button untuk tambah kategori -->
                     <button class="floating-action-btn" id="add-category-btn">
                         <i class="fas fa-plus"></i>
@@ -216,14 +216,15 @@
                                     </div>
                                     <div class="summary-item">
                                         <span class="summary-label">Status:</span>
-                                        <span id="detail-transaction-status" class="summary-value status-badge active"></span>
+                                        <span id="detail-transaction-status"
+                                            class="summary-value status-badge active"></span>
                                     </div>
                                     <div class="summary-item total-item">
                                         <span class="summary-label">Total:</span>
                                         <span id="detail-transaction-total" class="summary-value total-value"></span>
                                     </div>
                                 </div>
-                                
+
                                 <h4 class="detail-section-title">Detail Item</h4>
                                 <div class="detail-items-container">
                                     <div class="detail-items-list" id="transaction-items-body">
@@ -278,9 +279,12 @@
                 </div>
                 <div class="form-group">
                     <label for="product-category">Kategori</label>
-                    <select id="product-category" class="form-control" required>
+                    <select id="product-category" class="form-control" required hidden>
                         <!-- Opsi kategori akan dimuat di sini -->
                     </select>
+                    <div class="select-button-group" id="product-category-buttons">
+                        <!-- Tombol kategori akan dimuat di sini -->
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="product-price">Harga</label>
@@ -296,10 +300,14 @@
                 </div>
                 <div class="form-group">
                     <label for="product-status">Status</label>
-                    <select id="product-status" class="form-control" required>
+                    <select id="product-status" class="form-control" required hidden>
                         <option value="Aktif">Aktif</option>
                         <option value="Nonaktif">Nonaktif</option>
                     </select>
+                    <div class="status-select-buttons" id="product-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif" data-value="Nonaktif">Nonaktif</button>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancel-product">Batal</button>
@@ -329,10 +337,14 @@
                 </div>
                 <div class="form-group">
                     <label for="category-status">Status</label>
-                    <select id="category-status" class="form-control" required>
+                    <select id="category-status" class="form-control" required hidden>
                         <option value="Aktif">Aktif</option>
                         <option value="Nonaktif">Nonaktif</option>
                     </select>
+                    <div class="status-select-buttons" id="category-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif" data-value="Nonaktif">Nonaktif</button>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancel-category">Batal</button>
@@ -358,18 +370,27 @@
                 </div>
                 <div class="form-group">
                     <label for="payment-type">Tipe</label>
-                    <select id="payment-type" class="form-control" required>
+                    <select id="payment-type" class="form-control" required hidden>
                         <option value="Tunai">Tunai</option>
                         <option value="Digital">Digital</option>
                         <option value="Kartu">Kartu</option>
                     </select>
+                    <div class="select-button-group" id="payment-type-buttons">
+                        <button type="button" class="select-button" data-value="Tunai">Tunai</button>
+                        <button type="button" class="select-button" data-value="Digital">Digital</button>
+                        <button type="button" class="select-button" data-value="Kartu">Kartu</button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="payment-status">Status</label>
-                    <select id="payment-status" class="form-control" required>
+                    <select id="payment-status" class="form-control" required hidden>
                         <option value="Aktif">Aktif</option>
                         <option value="Nonaktif">Nonaktif</option>
                     </select>
+                    <div class="status-select-buttons" id="payment-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif" data-value="Nonaktif">Nonaktif</button>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancel-payment">Batal</button>
