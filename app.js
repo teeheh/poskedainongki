@@ -6,14 +6,32 @@ const CONFIG = {
     spreadsheetId: '1gd1JcYiuUsPXO1xbwKHJomnLxMdK7s7xfJ60l3p7WKw',
     // Konfigurasi standar untuk Google API
     discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile',
 };
 
 // Session management constants
 const SESSION_STORAGE_KEY = 'pos_session_data';
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// Data Aplikasi
+// Application State Management (similar to exam.js pattern)
+let state = {
+    user: null,
+    token: null,
+    isLoggedIn: false,
+    currentPage: 'kasir',
+    loading: false,
+    error: null,
+    sessionTimestamp: null,
+    products: [],
+    categories: [],
+    paymentMethods: [],
+    cart: [],
+    transactions: [],
+    gapiInited: false,
+    gisInited: false
+};
+
+// Legacy variables for backward compatibility
 let products = [];
 let categories = [];
 let paymentMethods = [];
@@ -22,6 +40,130 @@ let currentUser = null;
 let gapiInited = false;
 let gisInited = false;
 let tokenClient;
+
+// State Management Functions (similar to exam.js pattern)
+function updateState(newState) {
+    state = { ...state, ...newState };
+    // Sync legacy variables for backward compatibility
+    syncLegacyVariables();
+}
+
+function syncLegacyVariables() {
+    // Sync arrays and objects properly
+    products = Array.isArray(state.products) ? [...state.products] : [];
+    categories = Array.isArray(state.categories) ? [...state.categories] : [];
+    paymentMethods = Array.isArray(state.paymentMethods) ? [...state.paymentMethods] : [];
+    cart = Array.isArray(state.cart) ? [...state.cart] : [];
+    currentUser = state.user ? { ...state.user } : null;
+    gapiInited = state.gapiInited || false;
+    gisInited = state.gisInited || false;
+
+    // Debug logging
+    console.log('Legacy variables synced:', {
+        products: products.length,
+        categories: categories.length,
+        paymentMethods: paymentMethods.length,
+        cart: cart.length,
+        currentUser: currentUser ? currentUser.name : null
+    });
+}
+
+function showLoading() {
+    updateState({ loading: true });
+    // Show loading overlay if exists
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('hidden');
+    }
+}
+
+function hideLoading() {
+    updateState({ loading: false });
+    // Hide loading overlay if exists
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
+function showError(message) {
+    updateState({ error: message });
+    // Show error message if error elements exist
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    if (errorMessage && errorText) {
+        errorText.textContent = message;
+        errorMessage.classList.remove('hidden');
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            errorMessage.classList.add('hidden');
+            updateState({ error: null });
+        }, 5000);
+    } else {
+        // Fallback to alert if error elements don't exist
+        alert('Error: ' + message);
+    }
+}
+
+function hideError() {
+    updateState({ error: null });
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage) {
+        errorMessage.classList.add('hidden');
+    }
+}
+
+// Add transaction to state (enhanced transaction management)
+function addTransactionToState(transaction) {
+    try {
+        updateState(prevState => ({
+            transactions: [...prevState.transactions, {
+                ...transaction,
+                timestamp: Date.now()
+            }]
+        }));
+
+        // Save session data after adding transaction
+        if (state.user) {
+            saveSessionData();
+        }
+
+        console.log('Transaction added to state successfully');
+
+    } catch (error) {
+        console.error('Error adding transaction to state:', error);
+        showError('Gagal menambahkan transaksi ke state: ' + error.message);
+    }
+}
+
+// Validate current session
+function validateCurrentSession() {
+    try {
+        if (!state.isLoggedIn || !state.user) {
+            return false;
+        }
+
+        // Check if session is expired
+        if (!isSessionValid()) {
+            console.log('Session validation failed - expired');
+            return false;
+        }
+
+        // Check if we have a valid token
+        const token = state.token || gapi.client.getToken();
+        if (!token) {
+            console.log('Session validation failed - no token');
+            return false;
+        }
+
+        console.log('Session validation successful');
+        return true;
+
+    } catch (error) {
+        console.error('Error validating session:', error);
+        return false;
+    }
+}
 
 // DOM Elements
 const loginPage = document.getElementById('login-page');
@@ -445,16 +587,16 @@ function renderChangeComposition(composition) {
     `).join('');
 }
 
-// Tampilkan status loading
+// Tampilkan status loading (enhanced with null checks)
 function showLoading(button, textElement) {
-    button.disabled = true;
-    textElement.innerHTML = '<div class="loading"></div>';
+    if (button) button.disabled = true;
+    if (textElement) textElement.innerHTML = '<div class="loading"></div>';
 }
 
-// Sembunyikan status loading
+// Sembunyikan status loading (enhanced with null checks)
 function hideLoading(button, textElement, text) {
-    button.disabled = false;
-    textElement.textContent = text;
+    if (button) button.disabled = false;
+    if (textElement) textElement.textContent = text;
 }
 
 // Inisialisasi Google API
@@ -463,199 +605,577 @@ function gapiLoaded() {
 }
 
 async function initializeGapiClient() {
-    await gapi.client.init({
-        apiKey: '',
-        discoveryDocs: CONFIG.discoveryDocs,
-    });
-    gapiInited = true;
-    maybeEnableButtons();
+    try {
+        await gapi.client.init({
+            apiKey: '',
+            discoveryDocs: CONFIG.discoveryDocs,
+        });
+
+        updateState({ gapiInited: true });
+        console.log('Google API Client initialized');
+
+        maybeEnableButtons();
+
+    } catch (error) {
+        console.error('Error initializing Google API Client:', error);
+        showError('Gagal menginisialisasi Google API Client: ' + error.message);
+        updateState({ gapiInited: false });
+    }
 }
 
 function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CONFIG.clientId,
-        scope: CONFIG.scope,
-        callback: '', // Akan diatur nanti
-    });
-    gisInited = true;
-    maybeEnableButtons();
+    try {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CONFIG.clientId,
+            scope: CONFIG.scope,
+            callback: '', // Akan diatur nanti
+        });
+
+        updateState({ gisInited: true });
+        console.log('Google Identity Services initialized with scopes:', CONFIG.scope);
+
+        maybeEnableButtons();
+
+    } catch (error) {
+        console.error('Error initializing Google Identity Services:', error);
+        showError('Gagal menginisialisasi Google Identity Services: ' + error.message);
+        updateState({ gisInited: false });
+    }
 }
 
 function maybeEnableButtons() {
-    if (gapiInited && gisInited) {
-        loginBtn.disabled = false;
-        loginStatus.textContent = 'Aplikasi siap. Silakan login.';
-        
+    if (state.gapiInited && state.gisInited) {
+        console.log('Google APIs ready, enabling login button');
+
+        // Use safe DOM element access
+        const loginButton = document.getElementById('login-btn');
+        const statusElement = document.getElementById('login-status');
+
+        if (loginButton) loginButton.disabled = false;
+        if (statusElement) statusElement.textContent = 'Aplikasi siap. Silakan login.';
+
         // Check for saved session when APIs are ready
-        restoreSession();
+        setTimeout(() => {
+            restoreSession();
+        }, 500); // Small delay to ensure everything is ready
+
+    } else {
+        console.log('Google APIs not ready yet');
+        const statusElement = document.getElementById('login-status');
+        if (statusElement) statusElement.textContent = 'Memuat Google APIs...';
     }
 }
 
-// Handle Login
-function handleAuthClick() {
-    tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) {
-            throw resp;
-        }
+// Handle Login (enhanced with comprehensive state management)
+async function handleAuthClick() {
+    try {
+        showLoading();
+        updateState({ error: null });
 
-        loginStatus.textContent = 'Login berhasil! Memuat data...';
+        tokenClient.callback = async (resp) => {
+            try {
+                if (resp.error !== undefined) {
+                    throw new Error(resp.error_description || resp.error || 'Login gagal');
+                }
 
-        // Set user info
-        const userInfo = await getUserInfo();
-        currentUser = {
-            name: userInfo.name,
-            email: userInfo.email,
-            avatar: userInfo.name.charAt(0).toUpperCase()
+                console.log('Login response received:', resp);
+
+                // Set token in gapi client immediately
+                gapi.client.setToken({ access_token: resp.access_token });
+
+                // Update state
+                updateState({
+                    token: resp.access_token,
+                    isLoggedIn: true,
+                    loading: true
+                });
+
+                // Set user info with enhanced error handling
+                const userInfo = await getUserInfo();
+
+                // If getUserInfo returns null (token expired), stop the login process
+                if (!userInfo) {
+                    console.log('User info not available, clearing token and stopping login process');
+                    gapi.client.setToken('');
+                    updateState({ token: null });
+                    hideLoading();
+                    return;
+                }
+
+                const userData = {
+                    name: userInfo.name || 'User',
+                    email: userInfo.email || '',
+                    picture: userInfo.picture || '',
+                    avatar: userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'
+                };
+
+                console.log('User data prepared:', userData);
+
+                // Update state with user data
+                updateState({ user: userData });
+
+                // Update UI
+                updateUserInterface();
+
+                console.log('Loading application data...');
+
+                // Load data from Google Sheets with enhanced error handling
+                await loadAllData();
+
+                // Update state with loaded data
+                updateState({
+                    loading: false,
+                    currentPage: 'kasir',
+                    sessionTimestamp: Date.now()
+                });
+
+                // Ensure cart is properly initialized after login
+                if (!Array.isArray(state.cart)) {
+                    updateState({ cart: [] });
+                }
+
+                // Sync legacy variables after data load
+                syncLegacyVariables();
+
+                // Show main application
+                showMainApplication();
+
+                // Save comprehensive session data
+                saveSessionData(userData);
+
+                // Start session monitoring after successful login
+                startSessionMonitoring();
+
+                // Update login status
+                if (loginStatus) {
+                    loginStatus.textContent = 'Login berhasil!';
+                    setTimeout(() => {
+                        loginStatus.textContent = '';
+                    }, 2000);
+                }
+
+                console.log('Login process completed successfully');
+
+            } catch (error) {
+                console.error('Error in token callback:', error);
+                hideLoading();
+                updateState({
+                    loading: false,
+                    error: 'Login gagal: ' + (error.message || 'Unknown error')
+                });
+                showError('Login gagal: ' + (error.message || 'Unknown error'));
+            }
         };
 
-        userAvatar.textContent = currentUser.avatar;
-        userName.textContent = currentUser.name;
-        userAvatarSettings.textContent = currentUser.avatar;
-        userNameSettings.textContent = currentUser.name;
+        // Clear any existing session data to ensure fresh login
+        clearSessionData();
 
-        // Load data dari Google Sheets
-        await loadAllData();
-
-        // Render kategori produk
-        renderCategories();
-
-        // Tampilkan halaman kasir
-        loginPage.classList.remove('active');
-        kasirPage.classList.add('active');
-
-        // Tampilkan navbar setelah login berhasil
-        document.querySelector('.bottom-nav').style.display = 'flex';
-
-        // Save session data to localStorage
-        saveSessionData(currentUser);
-
-        loginStatus.textContent = '';
-    };
-
-    if (gapi.client.getToken() === null) {
+        // Always request fresh token to ensure correct scope
+        console.log('Requesting fresh access token with correct scope');
         tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-        tokenClient.requestAccessToken({ prompt: '' });
+
+    } catch (error) {
+        console.error('Error initiating login:', error);
+        hideLoading();
+        updateState({ loading: false });
+        showError('Gagal memulai proses login: ' + error.message);
     }
 }
 
-// Dapatkan info user
+// Dapatkan info user (enhanced with better error handling)
 async function getUserInfo() {
     try {
+        console.log('Getting user info...');
+
+        // Ensure token is properly set in gapi client
+        if (state.token) {
+            console.log('Setting token in gapi client');
+            gapi.client.setToken({ access_token: state.token });
+        }
+
+        // Get token from gapi client (now it should have the correct token)
+        const token = gapi.client.getToken();
+
+        if (!token || !token.access_token) {
+            throw new Error('No access token available in gapi client');
+        }
+
+        console.log('Using access token from gapi client for user info request');
+
         const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
             headers: {
-                'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                'Authorization': `Bearer ${token.access_token}`
             }
         });
-        return await response.json();
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error('Token expired or invalid, need re-authentication');
+                showError('Token telah kedaluwarsa. Silakan login kembali.');
+                // Clear the invalid token
+                gapi.client.setToken('');
+                updateState({ token: null });
+                return null;
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const userInfo = await response.json();
+        console.log('User info retrieved successfully:', userInfo);
+        return userInfo;
+
     } catch (error) {
         console.error('Error mendapatkan info user:', error);
-        return { name: 'User', email: 'user@example.com' };
+
+        // If it's a token error, trigger re-authentication
+        if (error.message.includes('401') || error.message.includes('Token')) {
+            console.log('Token error detected, clearing invalid token');
+            gapi.client.setToken('');
+            updateState({ token: null });
+            showError('Sesi login telah kedaluwarsa. Silakan login kembali.');
+            return null;
+        }
+
+        showError('Gagal mendapatkan informasi pengguna: ' + error.message);
+        return {
+            name: 'User',
+            email: 'user@example.com',
+            picture: ''
+        };
     }
 }
 
-// Handle Logout
-function handleSignout() {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-        google.accounts.oauth2.revoke(token.access_token);
-        gapi.client.setToken('');
-        currentUser = null;
-        cart = [];
-        renderCart();
+// Handle Logout (enhanced with comprehensive state management)
+async function handleSignout() {
+    try {
+        console.log('Initiating logout process...');
 
-        kasirPage.classList.remove('active');
-        pengaturanPage.classList.remove('active');
-        keranjangMobilePage.classList.remove('active');
-        loginPage.classList.add('active');
+        const token = gapi.client.getToken();
+        if (token !== null && token.access_token) {
+            try {
+                // Revoke token from Google
+                await google.accounts.oauth2.revoke(token.access_token);
+                console.log('Google token revoked successfully');
+            } catch (error) {
+                console.error('Error revoking Google token:', error);
+                // Continue with logout even if token revocation fails
+            }
 
-        // Sembunyikan navbar di halaman login
-        document.querySelector('.bottom-nav').style.display = 'none';
+            // Clear Google client token
+            gapi.client.setToken('');
+        }
+
+        // Reset application state
+        updateState({
+            user: null,
+            token: null,
+            isLoggedIn: false,
+            cart: [],
+            currentPage: 'kasir',
+            products: [],
+            categories: [],
+            paymentMethods: [],
+            transactions: []
+        });
 
         // Clear session data from localStorage
         clearSessionData();
 
-        loginStatus.textContent = 'Anda telah logout.';
+        // Stop session monitoring
+        stopSessionMonitoring();
+
+        // Update UI to show login page
+        if (loginPage) loginPage.classList.add('active');
+        if (kasirPage) kasirPage.classList.remove('active');
+        if (pengaturanPage) pengaturanPage.classList.remove('active');
+        if (keranjangMobilePage) keranjangMobilePage.classList.remove('active');
+
+        // Hide bottom navigation
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.style.display = 'none';
+        }
+
+        // Clear user interface elements
+        const avatarElements = ['user-avatar', 'user-avatar-settings', 'user-avatar-keranjang'];
+        const nameElements = ['user-name', 'user-name-settings', 'user-name-keranjang'];
+
+        avatarElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = '';
+        });
+
+        nameElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = '';
+        });
+
+        // Remove session status indicator
+        const sessionIndicator = document.getElementById('session-status-indicator');
+        if (sessionIndicator) {
+            sessionIndicator.remove();
+        }
+
+        // Update login status
+        if (loginStatus) {
+            loginStatus.textContent = 'Anda telah logout.';
+            setTimeout(() => {
+                loginStatus.textContent = '';
+            }, 3000);
+        }
+
+        console.log('Logout completed successfully');
+
+    } catch (error) {
+        console.error('Error during logout:', error);
+        showError('Terjadi kesalahan saat logout: ' + error.message);
     }
 }
 
-// Load semua data dari Google Sheets
+// Load semua data dari Google Sheets (enhanced with comprehensive state management)
 async function loadAllData() {
     try {
-        // Ambil data dari Google Sheets
-        await loadCategories();
-        await loadProducts();
-        await loadPaymentMethods();
+        console.log('Starting data load process...');
+        updateState({ loading: true });
 
-        // Render elemen-elemen statis yang tidak butuh halaman kasir aktif
-        renderProducts();
-        renderProductTable();
-        renderCategoryTable();
-        renderPaymentTable();
-        populateCategorySelect();
-        populatePaymentMethodSelect();
-        renderPaymentMethods();
-        renderCategories();
+        // Load data from Google Sheets with individual error handling
+        try {
+            await loadCategories();
+            console.log('Categories loaded successfully');
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            if (error.status === 401 || error.result?.error?.code === 401) {
+                // If it's a session expiry error, stop loading and redirect
+                throw error;
+            }
+            showError('Gagal memuat kategori: ' + (error.result?.error?.message || error.message));
+        }
 
-        // ⚠️ Jangan panggil renderCart() di sini
-        // (akan dipanggil setelah kasir-page aktif di handleAuthClick)
+        try {
+            await loadProducts();
+            console.log('Products loaded successfully');
+        } catch (error) {
+            console.error('Error loading products:', error);
+            if (error.status === 401 || error.result?.error?.code === 401) {
+                // If it's a session expiry error, stop loading and redirect
+                throw error;
+            }
+            showError('Gagal memuat produk: ' + (error.result?.error?.message || error.message));
+        }
+
+        try {
+            await loadPaymentMethods();
+            console.log('Payment methods loaded successfully');
+        } catch (error) {
+            console.error('Error loading payment methods:', error);
+            if (error.status === 401 || error.result?.error?.code === 401) {
+                // If it's a session expiry error, stop loading and redirect
+                throw error;
+            }
+            showError('Gagal memuat metode pembayaran: ' + (error.result?.error?.message || error.message));
+        }
+
+        // Update state with loaded data
+        syncLegacyVariables();
+
+        // Render UI elements with error handling
+        try {
+            renderProducts();
+            renderProductTable();
+            renderCategoryTable();
+            renderPaymentTable();
+            populateCategorySelect();
+            populatePaymentMethodSelect();
+            renderPaymentMethods();
+            renderCategories();
+            console.log('UI elements rendered successfully');
+        } catch (error) {
+            console.error('Error rendering UI elements:', error);
+            showError('Gagal merender elemen UI: ' + error.message);
+        }
+
+        console.log('All data loaded successfully');
+
     } catch (error) {
-        console.error('Error loading data:', error);
-        alert('Gagal memuat data dari Google Sheets. Periksa koneksi dan izin.');
+        console.error('Unexpected error loading data:', error);
+
+        // Check if it's a session expiry error
+        if (error.status === 401 || error.result?.error?.code === 401) {
+            console.log('Session expired during data load - redirecting to login');
+            stopSessionMonitoring(); // Stop monitoring since session is invalid
+            handleAuthError();
+            return; // Exit early if session expired
+        }
+
+        showError('Terjadi kesalahan saat memuat data: ' + (error.result?.error?.message || error.message));
+        throw error; // Re-throw to allow calling function to handle
+    } finally {
+        updateState({ loading: false });
     }
 }
 
 
 
-// Load produk dari Google Sheets
+// Load produk dari Google Sheets (enhanced with state management and error handling)
 async function loadProducts() {
-    const response = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: CONFIG.spreadsheetId,
-        range: 'Produk!A2:G', // A2:G untuk menghindari header
-    });
+    try {
+        console.log('Loading products from Google Sheets...');
 
-    const values = response.result.values || [];
-    products = values.map(row => ({
-        id: row[0] || '',
-        name: row[1] || '',
-        description: row[2] || '',
-        price: parseInt(row[3]?.replace(/[^\d]/g, '')) || 0,
-        category: row[4] || '',
-        image: row[5] || '',
-        status: row[6] || 'Aktif'
-    }));
+        // Validate token before making API call
+        if (!gapi.client.getToken()?.access_token) {
+            throw new Error('No valid access token available');
+        }
+
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: CONFIG.spreadsheetId,
+            range: 'Produk!A2:G', // A2:G untuk menghindari header
+        });
+
+        // Check response status
+        if (response.status !== 200) {
+            throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+        }
+
+        const values = response.result.values || [];
+        const loadedProducts = values.map((row, index) => {
+            try {
+                return {
+                    id: row[0] || `PRD_${Date.now()}_${index}`,
+                    name: row[1] || 'Produk Tanpa Nama',
+                    description: row[2] || '',
+                    price: parseInt(row[3]?.replace(/[^\d]/g, '')) || 0,
+                    category: row[4] || '',
+                    image: row[5] || '',
+                    status: row[6] || 'Aktif'
+                };
+            } catch (error) {
+                console.error(`Error parsing product row ${index}:`, error);
+                return null;
+            }
+        }).filter(product => product !== null);
+
+        // Update state with loaded products
+        updateState({ products: loadedProducts });
+        console.log(`Loaded ${loadedProducts.length} products successfully`);
+
+    } catch (error) {
+        console.error('Error loading products:', error);
+
+        // Enhanced error handling with comprehensive 401 detection
+        if (handleApiError(error, 'memuat produk')) {
+            throw error; // Re-throw to stop execution if session expired
+        }
+
+        // Set empty array as fallback for other errors
+        updateState({ products: [] });
+        throw error;
+    }
 }
 
-// Load kategori dari Google Sheets
+// Load kategori dari Google Sheets (enhanced with state management and error handling)
 async function loadCategories() {
-    const response = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: CONFIG.spreadsheetId,
-        range: 'Kategori!A2:D', // A2:D untuk menghindari header
-    });
+    try {
+        console.log('Loading categories from Google Sheets...');
 
-    const values = response.result.values || [];
-    categories = values.map(row => ({
-        id: row[0] || '',
-        name: row[1] || '',
-        order: parseInt(row[2]) || 0,
-        status: row[3] || 'Aktif'
-    }));
+        // Validate token before making API call
+        if (!gapi.client.getToken()?.access_token) {
+            throw new Error('No valid access token available');
+        }
+
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: CONFIG.spreadsheetId,
+            range: 'Kategori!A2:D', // A2:D untuk menghindari header
+        });
+
+        // Check response status
+        if (response.status !== 200) {
+            throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+        }
+
+        const values = response.result.values || [];
+        const loadedCategories = values.map((row, index) => {
+            try {
+                return {
+                    id: row[0] || `CAT_${Date.now()}_${index}`,
+                    name: row[1] || 'Kategori Tanpa Nama',
+                    order: parseInt(row[2]) || 0,
+                    status: row[3] || 'Aktif'
+                };
+            } catch (error) {
+                console.error(`Error parsing category row ${index}:`, error);
+                return null;
+            }
+        }).filter(category => category !== null);
+
+        // Update state with loaded categories
+        updateState({ categories: loadedCategories });
+        console.log(`Loaded ${loadedCategories.length} categories successfully`);
+
+    } catch (error) {
+        console.error('Error loading categories:', error);
+
+        // Enhanced error handling with comprehensive 401 detection
+        if (handleApiError(error, 'memuat kategori')) {
+            throw error; // Re-throw to stop execution if session expired
+        }
+
+        // Set empty array as fallback for other errors
+        updateState({ categories: [] });
+        throw error;
+    }
 }
 
-// Load metode pembayaran dari Google Sheets
+// Load metode pembayaran dari Google Sheets (enhanced with state management and error handling)
 async function loadPaymentMethods() {
-    const response = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: CONFIG.spreadsheetId,
-        range: 'Metode_Pembayaran!A2:D', // A2:D untuk menghindari header
-    });
+    try {
+        console.log('Loading payment methods from Google Sheets...');
 
-    const values = response.result.values || [];
-    paymentMethods = values.map(row => ({
-        id: row[0] || '',
-        name: row[1] || '',
-        type: row[2] || '',
-        status: row[3] || 'Aktif'
-    }));
+        // Validate token before making API call
+        if (!gapi.client.getToken()?.access_token) {
+            throw new Error('No valid access token available');
+        }
+
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: CONFIG.spreadsheetId,
+            range: 'Metode_Pembayaran!A2:D', // A2:D untuk menghindari header
+        });
+
+        // Check response status
+        if (response.status !== 200) {
+            throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+        }
+
+        const values = response.result.values || [];
+        const loadedPaymentMethods = values.map((row, index) => {
+            try {
+                return {
+                    id: row[0] || `PM_${Date.now()}_${index}`,
+                    name: row[1] || 'Metode Tanpa Nama',
+                    type: row[2] || 'Tunai',
+                    status: row[3] || 'Aktif'
+                };
+            } catch (error) {
+                console.error(`Error parsing payment method row ${index}:`, error);
+                return null;
+            }
+        }).filter(method => method !== null);
+
+        // Update state with loaded payment methods
+        updateState({ paymentMethods: loadedPaymentMethods });
+        console.log(`Loaded ${loadedPaymentMethods.length} payment methods successfully`);
+
+    } catch (error) {
+        console.error('Error loading payment methods:', error);
+
+        // Enhanced error handling with comprehensive 401 detection
+        if (handleApiError(error, 'memuat metode pembayaran')) {
+            throw error; // Re-throw to stop execution if session expired
+        }
+
+        // Set empty array as fallback for other errors
+        updateState({ paymentMethods: [] });
+        throw error;
+    }
 }
 
 // Simpan produk ke Google Sheets
@@ -928,225 +1448,625 @@ async function saveTransaction(transaction, details) {
     });
 }
 
-// Render Kategori
+// Render Kategori (enhanced with null checks and state management)
 function renderCategories() {
+    // Safe DOM element access
     const categoryList = document.getElementById('category-list');
-    categoryList.innerHTML = '';
-
-    // Tambahkan kategori "Semua"
-    const allCategoryBtn = document.createElement('button');
-    allCategoryBtn.className = 'category-btn active';
-    allCategoryBtn.textContent = 'Semua';
-    allCategoryBtn.dataset.categoryId = 'all';
-    allCategoryBtn.addEventListener('click', () => filterProductsByCategory('all'));
-    categoryList.appendChild(allCategoryBtn);
-
-    // Tambahkan kategori lainnya
-    categories.forEach(category => {
-        const categoryBtn = document.createElement('button');
-        categoryBtn.className = 'category-btn';
-        categoryBtn.textContent = category.name;
-        categoryBtn.dataset.categoryId = category.id;
-        categoryBtn.addEventListener('click', () => filterProductsByCategory(category.id));
-        categoryList.appendChild(categoryBtn);
-    });
-}
-
-// Filter produk berdasarkan kategori
-function filterProductsByCategory(categoryId) {
-    // Ubah status aktif pada tombol kategori
-    document.querySelectorAll('.category-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.categoryId === categoryId) {
-            btn.classList.add('active');
-        }
-    });
-
-    // Filter produk
-    renderProducts(categoryId);
-}
-
-// Render Produk
-function renderProducts(categoryId = 'all') {
-    productGrid.innerHTML = '';
-    let activeProducts = products.filter(product => product.status === 'Aktif');
-
-    // Filter berdasarkan kategori jika bukan 'all'
-    if (categoryId !== 'all') {
-        activeProducts = activeProducts.filter(product => product.category === categoryId);
-    }
-
-    if (activeProducts.length === 0) {
-        productGrid.innerHTML = '<div class="text-center" style="grid-column: 1/-1; padding: 20px;">Tidak ada produk yang tersedia</div>';
+    if (!categoryList) {
+        console.error('Category list element not found');
         return;
     }
 
-    activeProducts.forEach(product => {
-        const category = categories.find(cat => cat.id === product.category);
-        const productCard = document.createElement('div');
-        productCard.className = 'product-card';
-        productCard.innerHTML = `
-            <div class="product-image">
-                ${product.image ?
-                `<img src="${product.image}" alt="${product.name}">` :
-                `<i class="fas fa-coffee"></i>`
+    try {
+        categoryList.innerHTML = '';
+
+        // Tambahkan kategori "Semua"
+        const allCategoryBtn = document.createElement('button');
+        allCategoryBtn.className = 'category-btn active';
+        allCategoryBtn.textContent = 'Semua';
+        allCategoryBtn.dataset.categoryId = 'all';
+        allCategoryBtn.addEventListener('click', () => filterProductsByCategory('all'));
+        categoryList.appendChild(allCategoryBtn);
+
+        // Tambahkan kategori lainnya using state data
+        state.categories.forEach(category => {
+            if (category.status === 'Aktif') {
+                const categoryBtn = document.createElement('button');
+                categoryBtn.className = 'category-btn';
+                categoryBtn.textContent = category.name || 'Kategori Tanpa Nama';
+                categoryBtn.dataset.categoryId = category.id;
+                categoryBtn.addEventListener('click', () => filterProductsByCategory(category.id));
+                categoryList.appendChild(categoryBtn);
             }
-                <div class="add-to-cart">
-                    <i class="fas fa-plus"></i>
-                </div>
-            </div>
-            <div class="product-info">
-                <div class="product-name">${product.name}</div>
-                <div class="product-price">${formatRupiah(product.price)}</div>
-            </div>
-        `;
-        productCard.addEventListener('click', () => addToCart(product));
-        productGrid.appendChild(productCard);
-    });
+        });
+
+        console.log(`Rendered ${state.categories.length} categories successfully`);
+
+    } catch (error) {
+        console.error('Error rendering categories:', error);
+        categoryList.innerHTML = '<div class="text-center" style="padding: 20px; color: var(--danger-color);">Error memuat kategori</div>';
+        showError('Gagal merender kategori: ' + error.message);
+    }
 }
 
-// Render Keranjang
-function renderCart() {
-    cartItems.innerHTML = '';
+// Filter produk berdasarkan kategori (enhanced with state management)
+function filterProductsByCategory(categoryId) {
+    try {
+        // Ubah status aktif pada tombol kategori
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        categoryButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.categoryId === categoryId) {
+                btn.classList.add('active');
+            }
+        });
 
-    if (cart.length === 0) {
-        cartItems.innerHTML = '<div class="text-center">Keranjang kosong</div>';
-        cartCount.textContent = '0 item';
-        cartSubtotal.textContent = formatRupiah(0);
-        if (cartDiscount) cartDiscount.textContent = formatRupiah(0);
-        cartTotal.textContent = formatRupiah(0);
+        // Filter produk using state data
+        renderProducts(categoryId);
 
-        // Update mobile cart badge when cart is empty
-        if (mobileCartBadge) {
-            mobileCartBadge.textContent = '0';
-        }
+        console.log(`Filtered products by category: ${categoryId}`);
+
+    } catch (error) {
+        console.error('Error filtering products by category:', error);
+        showError('Gagal memfilter produk: ' + error.message);
+    }
+}
+
+// Render Produk (enhanced with null checks and error handling)
+function renderProducts(categoryId = 'all') {
+    // Safe DOM element access
+    const gridElement = document.getElementById('product-grid');
+    if (!gridElement) {
+        console.error('Product grid element not found');
         return;
     }
 
-    let subtotal = 0;
+    try {
+        gridElement.innerHTML = '';
 
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
+        // Use state products instead of global products variable
+        let activeProducts = state.products.filter(product => product.status === 'Aktif');
 
-        const cartItem = document.createElement('div');
-        cartItem.className = 'cart-item';
-        cartItem.innerHTML = `
-            <div class="cart-item-info">
-                <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">${formatRupiah(item.price)}</div>
-            </div>
-            <div class="cart-item-controls">
-                <button class="quantity-btn decrease-btn" data-id="${item.id}">-</button>
-                <span class="quantity">${item.quantity}</span>
-                <button class="quantity-btn increase-btn" data-id="${item.id}">+</button>
-                <button class="remove-btn" data-id="${item.id}"><i class="fas fa-trash"></i></button>
-            </div>
-        `;
-        cartItems.appendChild(cartItem);
-    });
+        // Filter berdasarkan kategori jika bukan 'all'
+        if (categoryId !== 'all') {
+            activeProducts = activeProducts.filter(product => product.category === categoryId);
+        }
 
-    // Tidak ada diskon
-    const discount = 0;
-    const total = subtotal;
+        if (activeProducts.length === 0) {
+            gridElement.innerHTML = '<div class="text-center" style="grid-column: 1/-1; padding: 20px;">Tidak ada produk yang tersedia</div>';
+            return;
+        }
 
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = `${totalItems} item`;
-    cartSubtotal.textContent = formatRupiah(subtotal);
-    if (cartDiscount) cartDiscount.textContent = formatRupiah(discount);
-    cartTotal.textContent = formatRupiah(total);
+        activeProducts.forEach(product => {
+            // Find category safely
+            const category = state.categories.find(cat => cat.id === product.category);
 
-    // Update mobile cart badge
-    if (mobileCartBadge) {
-        mobileCartBadge.textContent = totalItems;
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <div class="product-image">
+                    ${product.image ?
+                    `<img src="${product.image}" alt="${product.name}">` :
+                    `<i class="fas fa-coffee"></i>`
+                }
+                    <div class="add-to-cart">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <div class="product-name">${product.name || 'Produk Tanpa Nama'}</div>
+                    <div class="product-price">${formatRupiah(product.price || 0)}</div>
+                </div>
+            `;
+
+            // Add error handling for click event
+            productCard.addEventListener('click', () => {
+                try {
+                    addToCart(product);
+                } catch (error) {
+                    console.error('Error adding product to cart:', error);
+                    showError('Gagal menambahkan produk ke keranjang');
+                }
+            });
+
+            gridElement.appendChild(productCard);
+        });
+
+        console.log(`Rendered ${activeProducts.length} products successfully`);
+
+    } catch (error) {
+        console.error('Error rendering products:', error);
+        if (gridElement) {
+            gridElement.innerHTML = '<div class="text-center" style="grid-column: 1/-1; padding: 20px; color: var(--danger-color);">Error memuat produk</div>';
+        }
+        showError('Gagal merender produk: ' + error.message);
     }
-
-    // Tambahkan event listener untuk tombol di keranjang
-    document.querySelectorAll('.decrease-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            decreaseQuantity(id);
-        });
-    });
-
-    document.querySelectorAll('.increase-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            increaseQuantity(id);
-        });
-    });
-
-    document.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.closest('.remove-btn').getAttribute('data-id');
-            removeFromCart(id);
-        });
-    });
 }
 
-// Tambah ke Keranjang
+// Update tampilan keranjang mobile (moved to global scope)
+function updateMobileCart() {
+    // Check if mobile cart elements exist before updating
+    if (!cartItemsMobile || !mobileCartBadge || !cartSubtotalMobile || !cartTotalMobile) {
+        console.log('Mobile cart elements not found, skipping update');
+        return;
+    }
+
+    try {
+        cartItemsMobile.innerHTML = '';
+        let subtotal = 0;
+
+        // Use state.cart instead of legacy cart variable
+        const currentCart = state.cart || [];
+
+        if (currentCart.length === 0) {
+            cartItemsMobile.innerHTML = `
+                <div class="empty-cart-message">
+                    <h4>Keranjang Belanja Kosong</h4>
+                    <p>Silakan tambahkan produk yang ingin Anda beli</p>
+                </div>
+            `;
+            if (mobileCartBadge) mobileCartBadge.textContent = '0';
+            if (cartSubtotalMobile) cartSubtotalMobile.textContent = formatRupiah(0);
+            if (cartDiscountMobile) cartDiscountMobile.textContent = formatRupiah(0);
+            if (cartTotalMobile) cartTotalMobile.textContent = formatRupiah(0);
+            return;
+        }
+
+        currentCart.forEach(item => {
+            const itemTotal = (item.price || 0) * (item.quantity || 0);
+            subtotal += itemTotal;
+
+            // Tampilan keranjang mobile dengan desain yang lebih baik
+            const cartItemMobileElement = document.createElement('div');
+            cartItemMobileElement.className = 'cart-item-mobile';
+            cartItemMobileElement.innerHTML = `
+                <div class="cart-item-info-mobile">
+                    <div class="cart-item-name-mobile">${item.name || 'Produk Tanpa Nama'}</div>
+                    <div class="cart-item-price-mobile">${formatRupiah(item.price || 0)}</div>
+                </div>
+                <div class="cart-item-actions-mobile">
+                    <div class="quantity-controls-mobile">
+                        <button class="quantity-btn-mobile minus-mobile"
+                                data-id="${item.id}"
+                                type="button"
+                                onclick="decreaseQuantity('${item.id}'); setTimeout(() => { updateMobileCart(); renderCart(); }, 10);">-</button>
+                        <span class="quantity-mobile">${item.quantity || 0}</span>
+                        <button class="quantity-btn-mobile plus-mobile"
+                                data-id="${item.id}"
+                                type="button"
+                                onclick="increaseQuantity('${item.id}'); setTimeout(() => { updateMobileCart(); renderCart(); }, 10);">+</button>
+                    </div>
+                    <button class="remove-btn-mobile"
+                            data-id="${item.id}"
+                            type="button"
+                            onclick="removeFromCart('${item.id}'); setTimeout(() => { updateMobileCart(); renderCart(); }, 10);">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            cartItemsMobile.appendChild(cartItemMobileElement);
+        });
+
+        // Update summary dengan styling yang lebih baik
+        const discount = 0;
+        const total = subtotal;
+
+        // Update mobile - menampilkan jumlah total item di keranjang dengan badge yang lebih menarik
+        const totalItems = currentCart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+        // Update mobile cart badge dengan animasi
+        if (mobileCartBadge) {
+            mobileCartBadge.textContent = totalItems;
+            mobileCartBadge.className = 'cart-count-badge';
+        }
+
+        // Update mobile cart totals dengan styling yang konsisten
+        if (cartSubtotalMobile) {
+            cartSubtotalMobile.textContent = formatRupiah(subtotal);
+            cartSubtotalMobile.className = 'summary-value-mobile';
+        }
+        if (cartDiscountMobile) {
+            cartDiscountMobile.textContent = formatRupiah(discount);
+            cartDiscountMobile.className = 'summary-value-mobile';
+        }
+        if (cartTotalMobile) {
+            cartTotalMobile.textContent = formatRupiah(total);
+            cartTotalMobile.className = 'summary-total-mobile';
+        }
+
+        // Mobile cart buttons now use inline onclick attributes for better reliability
+
+        // Mobile cart buttons now use inline onclick attributes for better reliability
+
+        console.log('Mobile cart updated successfully');
+
+    } catch (error) {
+        console.error('Error updating mobile cart:', error);
+    }
+}
+
+// Render Keranjang (enhanced with state management and null checks)
+function renderCart() {
+    try {
+        console.log('Rendering cart, current state.cart:', state.cart);
+
+        // Safe DOM element access
+        const cartContainer = document.getElementById('cart-items');
+        if (!cartContainer) {
+            console.error('Cart items container not found');
+            return;
+        }
+
+        cartContainer.innerHTML = '';
+
+        // Use state cart data consistently
+        const currentCart = state.cart || [];
+
+        if (currentCart.length === 0) {
+            cartContainer.innerHTML = `
+                <div class="empty-cart-message">
+                    <h4>Keranjang Belanja Kosong</h4>
+                    <p>Tambahkan produk untuk memulai belanja</p>
+                </div>
+            `;
+
+            // Update cart UI elements safely
+            const cartCountElement = document.getElementById('cart-count');
+            const cartSubtotalElement = document.getElementById('cart-subtotal');
+            const cartDiscountElement = document.getElementById('cart-discount');
+            const cartTotalElement = document.getElementById('cart-total');
+            const mobileBadge = document.getElementById('mobile-cart-badge');
+
+            if (cartCountElement) cartCountElement.textContent = '0 item';
+            if (cartSubtotalElement) cartSubtotalElement.textContent = formatRupiah(0);
+            if (cartDiscountElement) cartDiscountElement.textContent = formatRupiah(0);
+            if (cartTotalElement) cartTotalElement.textContent = formatRupiah(0);
+            if (mobileBadge) mobileBadge.textContent = '0';
+
+            console.log('Cart rendered as empty');
+            return;
+        }
+
+        let subtotal = 0;
+
+        currentCart.forEach(item => {
+            console.log('Rendering cart item:', item);
+
+            // Validate item data
+            if (!item || !item.id) {
+                console.error('Invalid cart item:', item);
+                return;
+            }
+
+            const itemTotal = (item.price || 0) * (item.quantity || 0);
+            subtotal += itemTotal;
+
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            cartItem.innerHTML = `
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name || 'Produk Tanpa Nama'}</div>
+                    <div class="cart-item-price">${formatRupiah(item.price || 0)}</div>
+                </div>
+                <div class="cart-item-controls">
+                    <button class="quantity-btn decrease-btn" data-id="${item.id}" data-product-id="${item.id}">-</button>
+                    <span class="quantity">${item.quantity || 0}</span>
+                    <button class="quantity-btn increase-btn" data-id="${item.id}" data-product-id="${item.id}">+</button>
+                    <button class="remove-btn" data-id="${item.id}" data-product-id="${item.id}"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            cartContainer.appendChild(cartItem);
+        });
+
+        // Tidak ada diskon
+        const discount = 0;
+        const total = subtotal;
+
+        const totalItems = currentCart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+        // Update cart UI elements safely
+        const cartCountElement = document.getElementById('cart-count');
+        const cartSubtotalElement = document.getElementById('cart-subtotal');
+        const cartDiscountElement = document.getElementById('cart-discount');
+        const cartTotalElement = document.getElementById('cart-total');
+        const mobileBadge = document.getElementById('mobile-cart-badge');
+
+        if (cartCountElement) cartCountElement.textContent = `${totalItems} item`;
+        if (cartSubtotalElement) cartSubtotalElement.textContent = formatRupiah(subtotal);
+        if (cartDiscountElement) cartDiscountElement.textContent = formatRupiah(discount);
+        if (cartTotalElement) cartTotalElement.textContent = formatRupiah(total);
+        if (mobileBadge) mobileBadge.textContent = totalItems.toString();
+
+        // Tambahkan event listener untuk tombol di keranjang dengan error handling
+        const decreaseButtons = cartContainer.querySelectorAll('.decrease-btn');
+        const increaseButtons = cartContainer.querySelectorAll('.increase-btn');
+        const removeButtons = cartContainer.querySelectorAll('.remove-btn');
+
+        decreaseButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                try {
+                    const id = e.target.getAttribute('data-id');
+                    if (id) decreaseQuantity(id);
+                } catch (error) {
+                    console.error('Error in decrease button click:', error);
+                }
+            });
+        });
+
+        increaseButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                try {
+                    const id = e.target.getAttribute('data-id');
+                    if (id) increaseQuantity(id);
+                } catch (error) {
+                    console.error('Error in increase button click:', error);
+                }
+            });
+        });
+
+        removeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    const id = e.target.getAttribute('data-id') || e.target.closest('.remove-btn')?.getAttribute('data-id');
+                    console.log('Remove button clicked for product ID:', id);
+                    if (id) {
+                        removeFromCart(id);
+                        // Re-render cart immediately after removal
+                        setTimeout(() => {
+                            renderCart();
+                        }, 10);
+                    } else {
+                        console.error('No product ID found on remove button');
+                    }
+                } catch (error) {
+                    console.error('Error in remove button click:', error);
+                }
+            });
+        });
+
+        console.log(`Cart rendered successfully with ${currentCart.length} items, subtotal: ${formatRupiah(subtotal)}`);
+
+    } catch (error) {
+        console.error('Error rendering cart:', error);
+        const cartContainer = document.getElementById('cart-items');
+        if (cartContainer) {
+            cartContainer.innerHTML = '<div class="text-center" style="color: var(--danger-color);">Error memuat keranjang</div>';
+        }
+        showError('Gagal merender keranjang: ' + error.message);
+    }
+}
+
+// Tambah ke Keranjang (enhanced with state management)
 function addToCart(product) {
-    const existingItem = cart.find(item => item.id === product.id);
-
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            quantity: 1
-        });
-    }
-
-    renderCart();
-
-    // Animasi feedback
-    // Menggunakan metode alternatif untuk menemukan kartu produk
-    const productCards = document.querySelectorAll('.product-card');
-    let foundCard = null;
-
-    productCards.forEach(card => {
-        const nameElement = card.querySelector('.product-name');
-        if (nameElement && nameElement.textContent === product.name) {
-            foundCard = card;
+    try {
+        // Validate product data
+        if (!product || !product.id || !product.name) {
+            console.error('Invalid product data:', product);
+            showError('Data produk tidak valid');
+            return;
         }
-    });
 
-    if (foundCard) {
-        foundCard.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            foundCard.style.transform = '';
-        }, 200);
-    }
-}
+        console.log('Adding product to cart:', product);
+        console.log('Current state.cart before:', state.cart);
 
-// Kurangi Kuantitas
-function decreaseQuantity(productId) {
-    const item = cart.find(item => item.id === productId);
-    if (item) {
-        if (item.quantity > 1) {
-            item.quantity -= 1;
+        // Update state cart
+        const existingItemIndex = state.cart.findIndex(item => item.id === product.id);
+
+        let newCart;
+        if (existingItemIndex >= 0) {
+            // Update existing item quantity
+            newCart = [...state.cart];
+            newCart[existingItemIndex] = {
+                ...newCart[existingItemIndex],
+                quantity: newCart[existingItemIndex].quantity + 1
+            };
         } else {
-            cart = cart.filter(item => item.id !== productId);
+            // Add new item to cart
+            newCart = [...state.cart, {
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1
+            }];
         }
+
+        // Update state directly to ensure it works
+        state.cart = newCart;
+
+        console.log('Current state.cart after:', state.cart);
+
+        // Sync legacy variables after direct state update
+        syncLegacyVariables();
+
+        // Re-render cart UI
         renderCart();
+
+        // Update mobile cart if mobile page is active
+        updateMobileCart();
+
+        // Save session data after cart update
+        if (state.user) {
+            saveSessionData();
+        }
+
+        // Animasi feedback
+        const productCards = document.querySelectorAll('.product-card');
+        let foundCard = null;
+
+        productCards.forEach(card => {
+            const nameElement = card.querySelector('.product-name');
+            if (nameElement && nameElement.textContent === product.name) {
+                foundCard = card;
+            }
+        });
+
+        if (foundCard) {
+            foundCard.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                foundCard.style.transform = '';
+            }, 200);
+        }
+
+        console.log('Product added to cart successfully');
+
+    } catch (error) {
+        console.error('Error adding product to cart:', error);
+        showError('Gagal menambahkan produk ke keranjang: ' + error.message);
     }
 }
 
-// Tambah Kuantitas
+// Kurangi Kuantitas (enhanced with state management)
+function decreaseQuantity(productId) {
+    try {
+        if (!productId) {
+            console.error('Product ID is required');
+            return;
+        }
+
+        console.log('Decreasing quantity for product:', productId);
+        console.log('Current state.cart before:', state.cart);
+
+        const itemIndex = state.cart.findIndex(item => item.id === productId);
+
+        if (itemIndex === -1) {
+            console.error('Product not found in cart:', productId);
+            return;
+        }
+
+        const item = state.cart[itemIndex];
+        let newCart;
+
+        if (item.quantity > 1) {
+            // Decrease quantity
+            newCart = [...state.cart];
+            newCart[itemIndex] = {
+                ...item,
+                quantity: item.quantity - 1
+            };
+        } else {
+            // Remove item from cart
+            newCart = state.cart.filter(item => item.id !== productId);
+        }
+
+        // Update state directly
+        state.cart = newCart;
+
+        console.log('Current state.cart after:', state.cart);
+
+        // Sync legacy variables
+        syncLegacyVariables();
+
+        // Re-render cart UI
+        renderCart();
+
+        // Update mobile cart
+        updateMobileCart();
+
+        // Save session data after cart update
+        if (state.user) {
+            saveSessionData();
+        }
+
+        console.log('Product quantity decreased successfully');
+
+    } catch (error) {
+        console.error('Error decreasing product quantity:', error);
+        showError('Gagal mengurangi jumlah produk: ' + error.message);
+    }
+}
+
+// Tambah Kuantitas (enhanced with state management)
 function increaseQuantity(productId) {
-    const item = cart.find(item => item.id === productId);
-    if (item) {
-        item.quantity += 1;
+    try {
+        if (!productId) {
+            console.error('Product ID is required');
+            return;
+        }
+
+        console.log('Increasing quantity for product:', productId);
+        console.log('Current state.cart before:', state.cart);
+
+        const itemIndex = state.cart.findIndex(item => item.id === productId);
+
+        if (itemIndex === -1) {
+            console.error('Product not found in cart:', productId);
+            return;
+        }
+
+        // Increase quantity
+        const newCart = [...state.cart];
+        newCart[itemIndex] = {
+            ...newCart[itemIndex],
+            quantity: newCart[itemIndex].quantity + 1
+        };
+
+        // Update state directly
+        state.cart = newCart;
+
+        console.log('Current state.cart after:', state.cart);
+
+        // Sync legacy variables
+        syncLegacyVariables();
+
+        // Re-render cart UI
         renderCart();
+
+        // Update mobile cart
+        updateMobileCart();
+
+        // Save session data after cart update
+        if (state.user) {
+            saveSessionData();
+        }
+
+        console.log('Product quantity increased successfully');
+
+    } catch (error) {
+        console.error('Error increasing product quantity:', error);
+        showError('Gagal menambah jumlah produk: ' + error.message);
     }
 }
 
-// Hapus dari Keranjang
+// Hapus dari Keranjang (enhanced with state management)
 function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    renderCart();
+    try {
+        if (!productId) {
+            console.error('Product ID is required');
+            return;
+        }
+
+        console.log('Removing product from cart:', productId);
+        console.log('Current state.cart before:', state.cart);
+
+        const newCart = state.cart.filter(item => item.id !== productId);
+
+        // Update state directly
+        state.cart = newCart;
+
+        console.log('Current state.cart after:', state.cart);
+
+        // Sync legacy variables
+        syncLegacyVariables();
+
+        // Re-render cart UI
+        renderCart();
+
+        // Update mobile cart
+        updateMobileCart();
+
+        // Save session data after cart update
+        if (state.user) {
+            saveSessionData();
+        }
+
+        console.log('Product removed from cart successfully');
+
+    } catch (error) {
+        console.error('Error removing product from cart:', error);
+        showError('Gagal menghapus produk dari keranjang: ' + error.message);
+    }
 }
 
 // Render Tabel Produk
@@ -1281,7 +2201,7 @@ function renderPaymentTable() {
 function populateCategorySelect() {
     productCategorySelect.innerHTML = '';
     const categoryButtonsContainer = document.getElementById('product-category-buttons');
-    
+
     if (categoryButtonsContainer) {
         categoryButtonsContainer.innerHTML = '';
     }
@@ -1293,7 +2213,7 @@ function populateCategorySelect() {
             option.value = category.id;
             option.textContent = category.name;
             productCategorySelect.appendChild(option);
-            
+
             // Also create a button for this category
             if (categoryButtonsContainer) {
                 const button = document.createElement('button');
@@ -1303,7 +2223,7 @@ function populateCategorySelect() {
                 button.dataset.value = category.id;
                 // Store category ID in a variable to ensure closure captures the right value
                 const catId = category.id;
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     // Remove selected class from all buttons
                     categoryButtonsContainer.querySelectorAll('.select-button').forEach(btn => {
                         btn.classList.remove('selected');
@@ -1316,7 +2236,7 @@ function populateCategorySelect() {
                 categoryButtonsContainer.appendChild(button);
             }
         });
-        
+
     // Reinitialize the select button system to ensure all event listeners work properly
     initializeCategoryButtons();
 }
@@ -1324,19 +2244,19 @@ function populateCategorySelect() {
 // Function to handle category button selection specifically
 function initializeCategoryButtons() {
     const categoryButtons = document.querySelectorAll('#product-category-buttons .select-button');
-    
+
     // Remove any existing listeners to prevent duplicates
     categoryButtons.forEach(button => {
         // Create a new button with same properties to clear event listeners
         const newButton = button.cloneNode(true);
         button.parentNode.replaceChild(newButton, button);
     });
-    
+
     // Add fresh event listeners to the new buttons
     const freshButtons = document.querySelectorAll('#product-category-buttons .select-button');
     freshButtons.forEach(button => {
         const catId = button.dataset.value;
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remove selected class from all buttons
             freshButtons.forEach(btn => {
                 btn.classList.remove('selected');
@@ -1353,21 +2273,21 @@ function initializeCategoryButtons() {
 function updateCategoryButtonSelection(value) {
     const categoryButtonsContainer = document.getElementById('product-category-buttons');
     if (!categoryButtonsContainer) return;
-    
+
     const allButtons = categoryButtonsContainer.querySelectorAll('.select-button');
-    
+
     // Remove selected class from all buttons
     allButtons.forEach(btn => {
         btn.classList.remove('selected');
     });
-    
+
     // Find and select the button with matching value
     allButtons.forEach(btn => {
         if (btn.dataset.value === value) {
             btn.classList.add('selected');
         }
     });
-    
+
     // Also update the hidden select
     const productCategorySelect = document.getElementById('product-category');
     productCategorySelect.value = value;
@@ -1396,11 +2316,11 @@ function addProduct() {
     document.getElementById('product-description').value = '';
     document.getElementById('product-image').value = '';
     document.getElementById('product-status').value = 'Aktif';
-    
+
     // Reset button selections for the add form
     const categoryButtons = document.querySelectorAll('#product-category-buttons .select-button');
     categoryButtons.forEach(btn => btn.classList.remove('selected'));
-    
+
     const productStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
     productStatusButtons.forEach(btn => {
         btn.classList.remove('aktif', 'nonaktif');
@@ -1408,10 +2328,10 @@ function addProduct() {
             btn.classList.add('aktif');
         }
     });
-    
+
     // Clear the category selection in hidden select
     document.getElementById('product-category').value = '';
-    
+
     productModal.classList.add('active');
     productForm.dataset.editingId = '';
 }
@@ -1426,13 +2346,13 @@ function editProduct(id) {
     document.getElementById('product-price').value = product.price;
     document.getElementById('product-description').value = product.description || '';
     document.getElementById('product-image').value = product.image || '';
-    
+
     // Set status
     document.getElementById('product-status').value = product.status;
-    
+
     // Update the buttons to reflect the current values
     updateButtonSelections('product', product);
-    
+
     // Update category button selection specifically
     updateCategoryButtonSelection(product.category);
 
@@ -1469,7 +2389,7 @@ function addCategory() {
     document.getElementById('category-name').value = '';
     document.getElementById('category-order').value = '';
     document.getElementById('category-status').value = 'Aktif';
-    
+
     // Reset button selections for the add form
     const categoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
     categoryStatusButtons.forEach(btn => {
@@ -1492,7 +2412,7 @@ function editCategory(id) {
     document.getElementById('category-name').value = category.name;
     document.getElementById('category-order').value = category.order;
     document.getElementById('category-status').value = category.status;
-    
+
     // Update the buttons to reflect the current values
     updateButtonSelections('category', category);
 
@@ -1532,7 +2452,7 @@ function addPaymentMethod() {
     document.getElementById('payment-name').value = '';
     document.getElementById('payment-type').value = 'Tunai';
     document.getElementById('payment-status').value = 'Aktif';
-    
+
     // Reset button selections for the add form
     const paymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
     paymentTypeButtons.forEach(btn => {
@@ -1541,7 +2461,7 @@ function addPaymentMethod() {
             btn.classList.add('selected');
         }
     });
-    
+
     const paymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
     paymentStatusButtons.forEach(btn => {
         btn.classList.remove('aktif', 'nonaktif');
@@ -1563,7 +2483,7 @@ function editPaymentMethod(id) {
     document.getElementById('payment-name').value = method.name;
     document.getElementById('payment-type').value = method.type;
     document.getElementById('payment-status').value = method.status;
-    
+
     // Update the buttons to reflect the current values
     updateButtonSelections('payment', method);
 
@@ -1630,11 +2550,11 @@ async function processPayment() {
         const paymentMethod = selectedPaymentMethod;
 
         // Hitung subtotal tanpa diskon
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const subtotal = state.cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
 
         // Simpan transaksi ke localStorage untuk Detail Transaksi
-        if (typeof saveTransactionToLocalStorage === 'function' && cart && Array.isArray(cart) && cart.length > 0) {
-            saveTransactionToLocalStorage(transactionId, total, paymentMethod, cart);
+        if (typeof saveTransactionToLocalStorage === 'function' && state.cart && Array.isArray(state.cart) && state.cart.length > 0) {
+            saveTransactionToLocalStorage(transactionId, total, paymentMethod, state.cart);
         }
 
         // Data transaksi
@@ -1647,11 +2567,11 @@ async function processPayment() {
             id_metode: paymentMethod.id,
             jumlah_bayar: amountPaid,
             kembalian: amountPaid - total,
-            nama_kasir: currentUser.name
+            nama_kasir: state.user.name
         };
 
         // Data detail transaksi
-        const details = cart.map(item => ({
+        const details = state.cart.map(item => ({
             id_detail: generateId('DET'),
             id_transaksi: transactionId,
             id_produk: item.id,
@@ -1688,13 +2608,13 @@ async function processPayment() {
         successModal.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Reset keranjang
-        cart = [];
+        // Reset keranjang and update state
+        updateState({ cart: [] });
         renderCart();
-        
+
         // Update session data since cart has changed
-        if (currentUser) {
-            saveSessionData(currentUser);
+        if (state.user) {
+            saveSessionData();
         }
 
         // Tutup checkout modal
@@ -1707,17 +2627,68 @@ async function processPayment() {
     }
 }
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi Google API first
-    gapiLoaded();
-    gisLoaded();
+// Check if user session is valid
+function isSessionValid() {
+    // Check if user data exists and is valid
+    if (!state.user || !state.user.name) return false;
 
-    // Sembunyikan bottom navigation saat pertama kali dimuat (login page)
-    document.querySelector('.bottom-nav').style.display = 'none';
+    // Check if session hasn't expired (24 hours)
+    const sessionTimestamp = state.sessionTimestamp || Date.now();
+    const sessionAge = Date.now() - sessionTimestamp;
+    return sessionAge < SESSION_TIMEOUT;
+}
 
-    // Login dengan Google
-    loginBtn.addEventListener('click', handleAuthClick);
+// Initialize app when DOM is loaded (enhanced with comprehensive state management)
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM Content Loaded - Initializing application...');
+
+    try {
+        // Initialize Google APIs first
+        if (typeof gapi !== 'undefined') {
+            gapiLoaded();
+        } else {
+            console.log('GAPI not loaded yet');
+        }
+
+        if (typeof google !== 'undefined' && typeof google.accounts !== 'undefined') {
+            gisLoaded();
+        } else {
+            console.log('GIS not loaded yet');
+        }
+
+        // Hide bottom navigation initially (login page)
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.style.display = 'none';
+        }
+
+        // Set initial state
+        updateState({
+            currentPage: 'kasir',
+            loading: false,
+            error: null,
+            sessionTimestamp: Date.now(),
+            cart: [], // Ensure cart is initialized as empty array
+            products: [],
+            categories: [],
+            paymentMethods: [],
+            transactions: []
+        });
+
+        // Sync legacy variables after initialization
+        syncLegacyVariables();
+
+        // Login dengan Google (only add listener if button exists)
+        if (loginBtn) {
+            loginBtn.addEventListener('click', handleAuthClick);
+        }
+
+        console.log('Application initialization completed');
+
+    } catch (error) {
+        console.error('Error during DOM Content Loaded initialization:', error);
+        showError('Terjadi kesalahan saat memuat aplikasi: ' + error.message);
+    }
 
     // Logout
     logoutBtn.addEventListener('click', (e) => {
@@ -1750,6 +2721,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetPage === 'keranjang-mobile-page' && currentUser) {
                 userAvatarKeranjang.textContent = currentUser.avatar;
                 userNameKeranjang.textContent = currentUser.name;
+                // Update mobile cart with current state
+                updateMobileCart();
+            }
+
+            // Always update mobile cart badge when navigating
+            if (currentUser) {
                 updateMobileCart();
             }
 
@@ -1765,94 +2742,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Fungsi untuk memperbarui tampilan keranjang mobile
-    function updateMobileCart() {
-        cartItemsMobile.innerHTML = '';
-        let subtotal = 0;
 
-        if (cart.length === 0) {
-            cartItemsMobile.innerHTML = '<div class="empty-cart">Keranjang kosong</div>';
-            mobileCartBadge.textContent = '0';
-            cartSubtotalMobile.textContent = formatRupiah(0);
-            if (cartDiscountMobile) cartDiscountMobile.textContent = formatRupiah(0);
-            cartTotalMobile.textContent = formatRupiah(0);
-            return;
-        }
+    // Tab pengaturan - use safe DOM element access
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContentElements = document.querySelectorAll('.tab-content');
 
-        cart.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            subtotal += itemTotal;
-
-            // Tampilan keranjang mobile
-            const cartItemMobileElement = document.createElement('div');
-            cartItemMobileElement.className = 'cart-item';
-            cartItemMobileElement.innerHTML = `
-                <div class="cart-item-info">
-                    <h4>${item.name}</h4>
-                    <p>${formatRupiah(item.price)}</p>
-                </div>
-                <div class="cart-item-actions">
-                    <button class="quantity-btn minus-mobile" data-id="${item.id}">-</button>
-                    <span class="quantity">${item.quantity}</span>
-                    <button class="quantity-btn plus-mobile" data-id="${item.id}">+</button>
-                </div>
-            `;
-            cartItemsMobile.appendChild(cartItemMobileElement);
-        });
-
-        // Update summary - tanpa diskon
-        const discount = 0;
-        const total = subtotal;
-
-        // Update mobile - menampilkan jumlah total item di keranjang
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        mobileCartBadge.textContent = totalItems;
-        cartSubtotalMobile.textContent = formatRupiah(subtotal);
-        if (cartDiscountMobile) cartDiscountMobile.textContent = formatRupiah(discount);
-        cartTotalMobile.textContent = formatRupiah(total);
-
-        // Tambahkan event listener untuk tombol quantity di mobile
-        document.querySelectorAll('.quantity-btn.minus-mobile').forEach(btn => {
+    if (tabButtons.length > 0) {
+        tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                decreaseQuantity(btn.getAttribute('data-id'));
-                updateMobileCart(); // Update tampilan mobile setelah perubahan
-            });
-        });
+                const targetTab = btn.getAttribute('data-tab');
 
-        document.querySelectorAll('.quantity-btn.plus-mobile').forEach(btn => {
-            btn.addEventListener('click', () => {
-                increaseQuantity(btn.getAttribute('data-id'));
-                updateMobileCart(); // Update tampilan mobile setelah perubahan
+                // Update tab aktif
+                tabButtons.forEach(tab => tab.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Tampilkan konten tab yang sesuai
+                tabContentElements.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                const targetContent = document.getElementById(`${targetTab}-tab`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+
+                // Ensure pengaturan page remains active in bottom nav
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(nav => {
+                    if (nav.getAttribute('data-page') === 'pengaturan-page') {
+                        nav.classList.add('active');
+                    } else {
+                        nav.classList.remove('active');
+                    }
+                });
             });
         });
     }
-
-    // Tab pengaturan
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.getAttribute('data-tab');
-
-            // Update tab aktif
-            tabBtns.forEach(tab => tab.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Tampilkan konten tab yang sesuai
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(`${targetTab}-tab`).classList.add('active');
-
-            // Ensure pengaturan page remains active in bottom nav
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(nav => {
-                if (nav.getAttribute('data-page') === 'pengaturan-page') {
-                    nav.classList.add('active');
-                } else {
-                    nav.classList.remove('active');
-                }
-            });
-        });
-    });
 
     // Tombol tambah
     addProductBtn.addEventListener('click', addProduct);
@@ -1861,7 +2786,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tombol checkout
     checkoutBtn.addEventListener('click', () => {
-        if (cart.length === 0) {
+        if (!state.cart || state.cart.length === 0) {
             alert('Keranjang kosong!');
             return;
         }
@@ -1884,7 +2809,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tombol checkout mobile
     checkoutBtnMobile.addEventListener('click', () => {
-        if (cart.length === 0) {
+        if (!state.cart || state.cart.length === 0) {
             alert('Keranjang kosong!');
             return;
         }
@@ -2198,7 +3123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Initialize button-based selections
     initializeSelectButtons();
 });
@@ -2249,7 +3174,7 @@ function initializeSelectButtons() {
     // Reattach event listeners to the new buttons
     const newProductStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
     newProductStatusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remove selected class from all buttons
             const allButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
             allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
@@ -2277,7 +3202,7 @@ function initializeSelectButtons() {
     // Reattach event listeners to the new buttons
     const newCategoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
     newCategoryStatusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remove selected class from all buttons
             const allButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
             allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
@@ -2305,7 +3230,7 @@ function initializeSelectButtons() {
     // Reattach event listeners to the new buttons
     const newPaymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
     newPaymentTypeButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remove selected class from all buttons
             const allButtons = document.querySelectorAll('#payment-type-buttons .select-button');
             allButtons.forEach(btn => btn.classList.remove('selected'));
@@ -2329,7 +3254,7 @@ function initializeSelectButtons() {
     // Reattach event listeners to the new buttons
     const newPaymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
     newPaymentStatusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Remove selected class from all buttons
             const allButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
             allButtons.forEach(btn => btn.classList.remove('aktif', 'nonaktif'));
@@ -2347,13 +3272,13 @@ function initializeSelectButtons() {
 
 // Function to update button selections when loading edit forms
 function updateButtonSelections(formType, data) {
-    switch(formType) {
+    switch (formType) {
         case 'product':
             // Update category selection - use the dedicated function
             if (data.category) {
                 updateCategoryButtonSelection(data.category);
             }
-            
+
             // Update status selection
             const productStatusButtons = document.querySelectorAll('#product-status-buttons .status-select-button');
             productStatusButtons.forEach(button => {
@@ -2371,7 +3296,7 @@ function updateButtonSelections(formType, data) {
                 }
             });
             break;
-            
+
         case 'category':
             // Update category status selection
             const categoryStatusButtons = document.querySelectorAll('#category-status-buttons .status-select-button');
@@ -2390,7 +3315,7 @@ function updateButtonSelections(formType, data) {
                 }
             });
             break;
-            
+
         case 'payment':
             // Update payment type selection
             const paymentTypeButtons = document.querySelectorAll('#payment-type-buttons .select-button');
@@ -2402,7 +3327,7 @@ function updateButtonSelections(formType, data) {
                     button.classList.remove('selected');
                 }
             });
-            
+
             // Update payment status selection
             const paymentStatusButtons = document.querySelectorAll('#payment-status-buttons .status-select-button');
             paymentStatusButtons.forEach(button => {
@@ -2426,162 +3351,513 @@ function updateButtonSelections(formType, data) {
 // Konfirmasi pembayaran
 confirmPaymentBtn.addEventListener('click', processPayment);
 
-// Save session data to localStorage
-function saveSessionData(userData) {
-    const sessionData = {
-        user: userData,
-        timestamp: Date.now(),
-        cart: cart // Save cart data as well
-    };
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+// Save session data to localStorage (enhanced with comprehensive state)
+function saveSessionData(userData = null) {
+    try {
+        const sessionData = {
+            user: userData || state.user,
+            token: state.token,
+            sessionTimestamp: Date.now(), // Use consistent timestamp field
+            timestamp: Date.now(), // Keep for backward compatibility
+            cart: state.cart,
+            currentPage: state.currentPage,
+            isLoggedIn: state.isLoggedIn,
+            // Store essential app data for quick restoration
+            products: state.products,
+            categories: state.categories,
+            paymentMethods: state.paymentMethods,
+            transactions: state.transactions
+        };
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+        console.log('Session data saved successfully');
+    } catch (error) {
+        console.error('Error saving session data:', error);
+        showError('Gagal menyimpan data sesi');
+    }
 }
 
-// Load session data from localStorage
+// Load session data from localStorage (enhanced with comprehensive state restoration)
 function loadSessionData() {
-    const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (sessionData) {
-        try {
+    try {
+        const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (sessionData) {
             const parsedData = JSON.parse(sessionData);
+
+            // Use sessionTimestamp if available, otherwise fall back to timestamp for backward compatibility
+            const timestampField = parsedData.sessionTimestamp || parsedData.timestamp || Date.now();
+
             // Check if session is still valid (not expired)
-            if (Date.now() - parsedData.timestamp < SESSION_TIMEOUT) {
+            if (Date.now() - timestampField < SESSION_TIMEOUT) {
+                console.log('Valid session data found');
                 return parsedData;
             } else {
-                // Session expired, remove it
+                console.log('Session expired, removing');
                 localStorage.removeItem(SESSION_STORAGE_KEY);
                 return null;
             }
-        } catch (e) {
-            console.error('Error parsing session data:', e);
-            localStorage.removeItem(SESSION_STORAGE_KEY);
-            return null;
         }
+        console.log('No session data found');
+        return null;
+    } catch (error) {
+        console.error('Error parsing session data:', error);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        showError('Error memuat data sesi');
+        return null;
     }
-    return null;
 }
 
 // Clear session data from localStorage
 function clearSessionData() {
-    localStorage.removeItem(SESSION_STORAGE_KEY);
+    try {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        console.log('Session data cleared');
+    } catch (error) {
+        console.error('Error clearing session data:', error);
+    }
 }
 
-// Restore session if available
+// Restore session if available (enhanced with comprehensive state management)
 async function restoreSession() {
-    const sessionData = loadSessionData();
-    if (sessionData) {
+    console.log('Attempting to restore session...');
+
+    try {
+        const sessionData = loadSessionData();
+        if (!sessionData) {
+            console.log('No session data to restore');
+            return false;
+        }
+
         // Check if Google API is ready before proceeding
-        if (!gapiInited || !gisInited) {
+        if (!state.gapiInited || !state.gisInited) {
             console.log('Google API not ready, initializing...');
-            // Wait a bit for API initialization
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Check again after delay
-            if (!gapiInited || !gisInited) {
-                console.log('Google API still not ready, showing login page');
+            showLoading();
+
+            // Wait for API initialization with timeout
+            let attempts = 0;
+            const maxAttempts = 20; // 10 seconds timeout
+
+            while ((!state.gapiInited || !state.gisInited) && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+            }
+
+            hideLoading();
+
+            if (!state.gapiInited || !state.gisInited) {
+                console.log('Google API still not ready after timeout');
+                showError('Google API tidak siap. Silakan refresh halaman.');
                 return false;
             }
         }
-        
-        // Temporarily set user data to update UI
-        currentUser = sessionData.user;
-        
+
+        // Validate session data structure
+        if (!sessionData.user || !sessionData.sessionTimestamp) {
+            console.log('Invalid session data structure');
+            clearSessionData();
+            return false;
+        }
+
+        // Check if session hasn't expired (be more lenient during restoration)
+        const sessionAge = Date.now() - sessionData.sessionTimestamp;
+        if (sessionAge >= SESSION_TIMEOUT) {
+            console.log('Session expired, clearing data');
+            clearSessionData();
+
+            // Show session expiry message
+            if (loginStatus) {
+                loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
+                loginStatus.style.color = 'var(--danger-color)';
+            }
+
+            return false;
+        }
+
+        // For browser refresh, don't be strict about Google token
+        // The token might not be loaded yet, but our session data is valid
+        console.log('Valid session data found, attempting restoration...');
+
+        // Try to restore Google token if we have one stored
+        if (sessionData.token && gapi.client) {
+            try {
+                gapi.client.setToken({ access_token: sessionData.token });
+                console.log('Google token restored from session storage');
+            } catch (tokenError) {
+                console.log('Could not restore Google token, will need fresh authentication');
+            }
+        }
+
+        // Restore state from session data
+        updateState({
+            user: sessionData.user,
+            token: sessionData.token,
+            isLoggedIn: true,
+            sessionTimestamp: sessionData.sessionTimestamp || Date.now(),
+            cart: sessionData.cart || [],
+            currentPage: sessionData.currentPage || 'kasir',
+            products: sessionData.products || [],
+            categories: sessionData.categories || [],
+            paymentMethods: sessionData.paymentMethods || [],
+            transactions: sessionData.transactions || []
+        });
+
+        // Ensure cart is properly initialized
+        if (!Array.isArray(state.cart)) {
+            updateState({ cart: [] });
+        }
+
         // Update UI with user information
-        if (currentUser) {
-            userAvatar.textContent = currentUser.avatar;
-            userName.textContent = currentUser.name;
-            userAvatarSettings.textContent = currentUser.avatar;
-            userNameSettings.textContent = currentUser.name;
-        }
-        
-        // Restore cart data
-        if (sessionData.cart) {
-            cart = sessionData.cart;
-        }
-        
+        updateUserInterface();
+
         try {
-            // Check if we have a valid Google token before attempting to load data
-            const token = gapi.client.getToken();
-            if (!token) {
-                // No token available, clear session and show login
-                clearSessionData();
-                currentUser = null;
-                
-                // Show login page
-                loginPage.classList.add('active');
-                kasirPage.classList.remove('active');
-                pengaturanPage.classList.remove('active');
-                keranjangMobilePage.classList.remove('active');
-                
-                // Hide the bottom navigation
-                document.querySelector('.bottom-nav').style.display = 'none';
-                
-                loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
-                return false;
-            }
-            
-            // Try to load all data
+            // Try to refresh/validate data from Google Sheets
+            console.log('Attempting to load fresh data from Google Sheets...');
+            showLoading();
+
+            // First check if we can access Google Sheets
             await loadAllData();
-            
-            // If data loading succeeds, show the main application pages
-            loginPage.classList.remove('active');
-            kasirPage.classList.add('active');
-            
-            // Show the bottom navigation
-            document.querySelector('.bottom-nav').style.display = 'flex';
-            
-            // Render cart if it exists
-            renderCart();
-            
-            console.log('Session restored successfully');
+
+            hideLoading();
+
+            // Show the main application
+            showMainApplication();
+
+            console.log('Session restored successfully with fresh data');
             return true;
+
         } catch (error) {
-            console.error('Error restoring session data:', error);
-            
-            // Check if this is a Google API authentication error
-            const isAuthError = error.status === 403 || 
-                               error.result?.error?.code === 403 || 
-                               error.body?.includes('PERMISSION_DENIED') ||
-                               error.message?.includes('PERMISSION_DENIED');
-            
-            if (isAuthError) {
-                // Clear the Google token and session data
-                const token = gapi.client.getToken();
-                if (token) {
-                    google.accounts.oauth2.revoke(token.access_token);
-                    gapi.client.setToken('');
-                }
-                
-                clearSessionData();
-                currentUser = null;
-                
-                // Show login page
-                loginPage.classList.add('active');
-                kasirPage.classList.remove('active');
-                pengaturanPage.classList.remove('active');
-                keranjangMobilePage.classList.remove('active');
-                
-                // Hide the bottom navigation
-                document.querySelector('.bottom-nav').style.display = 'none';
-                
-                loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
+            console.error('Error loading fresh data:', error);
+            hideLoading();
+
+            // Handle different types of errors
+            if (error.status === 401 || error.result?.error?.code === 401) {
+                console.log('Session expired during data restore - redirecting to login');
+                // Session expired, redirect to login
+                handleAuthError();
                 return false;
+            } else if (error.status === 403) {
+                console.log('Authentication error - insufficient permissions');
+                showError('Izin akses tidak mencukupi. Silakan login kembali.');
+                // Still show the app but user will need to login again
+                showMainApplication();
+                return true;
+            } else if (error.status === 404) {
+                console.log('Spreadsheet not found');
+                showError('Spreadsheet tidak ditemukan. Periksa konfigurasi.');
+                // Still show the app but with limited functionality
+                showMainApplication();
+                return true;
+            } else {
+                console.log('Other error during data load, using cached data');
+                // Show the app with cached data instead of failing completely
+                showMainApplication();
+                return true;
             }
-            
-            // For other errors, show the UI but indicate that data couldn't be loaded
-            // Show the main application pages but with error message
-            loginPage.classList.remove('active');
-            kasirPage.classList.add('active');
-            
-            // Show the bottom navigation
-            document.querySelector('.bottom-nav').style.display = 'flex';
-            
-            // Render cart if it exists
-            renderCart();
-            
-            loginStatus.textContent = 'Peringatan: Data tidak dapat dimuat. Silakan refresh halaman atau login kembali.';
-            return true;
         }
+
+    } catch (error) {
+        console.error('Unexpected error during session restore:', error);
+        hideLoading();
+        showError('Terjadi kesalahan saat memulihkan sesi. Silakan login kembali.');
+        clearSessionData();
+        return false;
     }
-    return false;
+}
+
+
+// Update user interface elements
+function updateUserInterface() {
+    if (!state.user) return;
+
+    console.log('Updating user interface with Google data:', state.user);
+
+    // Update all user avatar and name elements
+    const avatarElements = [
+        'user-avatar', 'user-avatar-settings', 'user-avatar-keranjang'
+    ];
+
+    const nameElements = [
+        'user-name', 'user-name-settings', 'user-name-keranjang'
+    ];
+
+    // Use simple avatar initials (no external image requests)
+    const avatarInitial = state.user.avatar || state.user.name.charAt(0).toUpperCase();
+
+    avatarElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            // Simple avatar display - just initials
+            element.textContent = avatarInitial;
+            element.style.cssText = `
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background-color: var(--primary-color);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 1.2rem;
+            `;
+            console.log('Updated avatar for', id, 'with:', avatarInitial);
+        }
+    });
+
+    nameElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = state.user.name;
+            console.log('Updated name for', id, 'with:', state.user.name);
+        }
+    });
+
+    console.log('User interface updated successfully');
+}
+
+// Show main application and hide login
+function showMainApplication() {
+    // Hide login page
+    if (loginPage) loginPage.classList.remove('active');
+
+    // Show appropriate page based on current state
+    switch (state.currentPage) {
+        case 'kasir':
+            if (kasirPage) kasirPage.classList.add('active');
+            break;
+        case 'pengaturan':
+            if (pengaturanPage) pengaturanPage.classList.add('active');
+            break;
+        case 'keranjang-mobile':
+            if (keranjangMobilePage) keranjangMobilePage.classList.add('active');
+            break;
+        default:
+            if (kasirPage) kasirPage.classList.add('active');
+    }
+
+    // Show bottom navigation
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav) {
+        bottomNav.style.display = 'flex';
+    }
+
+    // Add session status indicator
+    addSessionStatusIndicator();
+
+    // Render cart if exists
+    renderCart();
+
+    console.log('Main application shown');
+}
+
+// Add session status indicator to show session monitoring is active
+function addSessionStatusIndicator() {
+    // Remove existing indicator if any
+    const existingIndicator = document.getElementById('session-status-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+
+    if (!state.isLoggedIn) return;
+
+    // Create session status indicator
+    const indicator = document.createElement('div');
+    indicator.id = 'session-status-indicator';
+    indicator.className = 'session-status-indicator';
+    indicator.innerHTML = `
+        <div class="session-dot active" title="Sesi aktif - Monitoring berjalan"></div>
+        <span class="session-text">Sesi Aktif</span>
+    `;
+
+    // Add to header or navigation area
+    const headerArea = document.querySelector('.header') || document.querySelector('.top-nav') || document.body;
+    if (headerArea) {
+        indicator.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: var(--success-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 1000;
+            opacity: 0.8;
+        `;
+
+        indicator.querySelector('.session-dot').style.cssText = `
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 2s infinite;
+        `;
+
+        indicator.querySelector('.session-text').style.cssText = `
+            font-weight: 500;
+        `;
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        headerArea.appendChild(indicator);
+    }
+}
+
+// Handle authentication errors and session expiry
+function handleAuthError() {
+    console.log('Handling authentication error/session expiry...');
+
+    // Clear Google token
+    const token = gapi.client.getToken();
+    if (token && token.access_token) {
+        try {
+            google.accounts.oauth2.revoke(token.access_token);
+            console.log('Google token revoked successfully');
+        } catch (error) {
+            console.error('Error revoking token:', error);
+        }
+        gapi.client.setToken('');
+    }
+
+    // Clear session data
+    clearSessionData();
+
+    // Reset state completely
+    updateState({
+        user: null,
+        token: null,
+        isLoggedIn: false,
+        cart: [],
+        products: [],
+        categories: [],
+        paymentMethods: [],
+        transactions: [],
+        currentPage: 'kasir',
+        loading: false,
+        error: null,
+        gapiInited: false,
+        gisInited: false
+    });
+
+    // Update UI immediately - show login page
+    if (loginPage) loginPage.classList.add('active');
+    if (kasirPage) kasirPage.classList.remove('active');
+    if (pengaturanPage) pengaturanPage.classList.remove('active');
+    if (keranjangMobilePage) keranjangMobilePage.classList.remove('active');
+
+    // Hide bottom navigation
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav) {
+        bottomNav.style.display = 'none';
+    }
+
+    // Clear user interface elements
+    const avatarElements = ['user-avatar', 'user-avatar-settings', 'user-avatar-keranjang'];
+    const nameElements = ['user-name', 'user-name-settings', 'user-name-keranjang'];
+
+    avatarElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '';
+    });
+
+    nameElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '';
+    });
+
+    // Show clear session expiry message
+    if (loginStatus) {
+        loginStatus.textContent = 'Sesi telah kedaluwarsa. Silakan login kembali.';
+        loginStatus.style.color = 'var(--danger-color)';
+        setTimeout(() => {
+            loginStatus.textContent = '';
+            loginStatus.style.color = '';
+        }, 5000);
+    }
+
+    // Add visual feedback for session expiry
+    const loginContainer = document.querySelector('.login-container');
+    if (loginContainer) {
+        loginContainer.style.border = '2px solid var(--danger-color)';
+        loginContainer.style.backgroundColor = 'rgba(255, 0, 0, 0.05)';
+        setTimeout(() => {
+            loginContainer.style.border = '';
+            loginContainer.style.backgroundColor = '';
+        }, 5000);
+    }
+
+    console.log('Authentication error handled - redirected to login');
+}
+
+// Enhanced API error handler with automatic session expiry detection
+function handleApiError(error, operation = 'API operation') {
+    console.error(`Error in ${operation}:`, error);
+
+    // Check if it's a 401 Unauthorized error (session expired) - more comprehensive detection
+    const isAuthError =
+        error.status === 401 ||
+        error.result?.error?.code === 401 ||
+        error.result?.error?.status === 'UNAUTHENTICATED' ||
+        error.result?.error?.message?.includes('Request had invalid authentication credentials') ||
+        error.result?.error?.message?.includes('The caller does not have permission') ||
+        error.result?.error?.message?.includes('Login Required');
+
+    if (isAuthError) {
+        console.log('Session expired or authentication error detected - redirecting to login');
+
+        // Show user feedback with more specific message
+        showError('Sesi login telah kedaluwarsa atau tidak valid. Mengarahkan ke halaman login...');
+
+        // Immediately redirect to login (no delay needed for auth errors)
+        setTimeout(() => {
+            handleAuthError();
+        }, 1000);
+
+        return true; // Indicates session expiry was handled
+    }
+
+    // Handle other common API errors
+    if (error.status === 403) {
+        showError('Akses ditolak. Anda tidak memiliki izin untuk melakukan operasi ini.');
+        return false;
+    }
+
+    if (error.status === 404) {
+        showError('Data tidak ditemukan. Periksa konfigurasi spreadsheet.');
+        return false;
+    }
+
+    if (error.status === 429) {
+        showError('Terlalu banyak permintaan. Silakan tunggu sebentar dan coba lagi.');
+        return false;
+    }
+
+    if (error.status >= 500) {
+        showError('Terjadi kesalahan server. Silakan coba lagi nanti.');
+        return false;
+    }
+
+    // For other errors, show the error message
+    if (error.result?.error?.message) {
+        showError(`Gagal ${operation}: ${error.result.error.message}`);
+    } else if (error.message) {
+        showError(`Gagal ${operation}: ${error.message}`);
+    } else {
+        showError(`Gagal ${operation}. Silakan coba lagi.`);
+    }
+
+    return false; // Indicates other error was handled
 }
 
 // Manual payment input
@@ -2614,3 +3890,66 @@ amountPaidInput.addEventListener('input', (e) => {
         moreOptionsContent.classList.remove('show');
     }
 });
+
+// Global error handler for unhandled Google API errors
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+
+    // Check if it's a Google API error
+    if (event.reason && event.reason.result && event.reason.result.error) {
+        const error = event.reason;
+        if (error.status === 401 || error.result.error.code === 401) {
+            console.log('Unhandled session expiry detected - redirecting to login');
+            event.preventDefault(); // Prevent the error from being logged
+            handleAuthError();
+        }
+    }
+});
+
+// Session monitoring and validation
+let sessionCheckInterval = null;
+
+// Function to check if current session is still valid
+async function validateCurrentToken() {
+    try {
+        if (!gapi.client.getToken()?.access_token) {
+            console.log('No access token available');
+            return false;
+        }
+
+        // Make a simple API call to test if token is still valid
+        const response = await gapi.client.sheets.spreadsheets.get({
+            spreadsheetId: CONFIG.spreadsheetId
+        });
+
+        return response.status === 200;
+    } catch (error) {
+        console.log('Token validation failed:', error);
+        return false;
+    }
+}
+
+// Function to start session monitoring
+function startSessionMonitoring() {
+    if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+    }
+
+    sessionCheckInterval = setInterval(async () => {
+        if (state.isLoggedIn && state.token) {
+            const isValid = await validateCurrentToken();
+            if (!isValid) {
+                console.log('Session expired detected by monitoring - redirecting to login');
+                handleAuthError();
+            }
+        }
+    }, 60000); // Check every minute
+}
+
+// Function to stop session monitoring
+function stopSessionMonitoring() {
+    if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+        sessionCheckInterval = null;
+    }
+}
