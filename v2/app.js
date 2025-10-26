@@ -188,10 +188,11 @@ const cartSubtotal = document.getElementById('cart-subtotal');
 const cartDiscount = document.getElementById('cart-discount');
 const cartTotal = document.getElementById('cart-total');
 const cartSubtotalMobile = document.getElementById('cart-subtotal-mobile');
-const cartDiscountMobile = document.getElementById('cart-discount-mobile');
 const cartTotalMobile = document.getElementById('cart-total-mobile');
 const checkoutBtn = document.getElementById('checkout-btn');
 const checkoutBtnMobile = document.getElementById('checkout-btn-mobile');
+const cancelBtn = document.getElementById('cancel-btn');
+const cancelBtnMobile = document.getElementById('cancel-btn-mobile');
 const navItems = document.querySelectorAll('.nav-item');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
@@ -1543,18 +1544,18 @@ function renderProducts(categoryId = 'all') {
                     `<img src="${product.image}" alt="${product.name}">` :
                     `<i class="fas fa-coffee"></i>`
                 }
-                    <div class="add-to-cart">
-                        <i class="fas fa-plus"></i>
-                    </div>
                 </div>
                 <div class="product-info">
                     <div class="product-name">${product.name || 'Produk Tanpa Nama'}</div>
                     <div class="product-price">${formatRupiah(product.price || 0)}</div>
                 </div>
+
             `;
 
-            // Add error handling for click event
-            productCard.addEventListener('click', () => {
+            // Add event listener to the add-to-cart button
+            const addToCartBtn = productCard.querySelector('.product-image');
+            addToCartBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 try {
                     addToCart(product);
                 } catch (error) {
@@ -1649,7 +1650,6 @@ function updateMobileCart() {
         }
 
         cartSubtotalMobile.textContent = formatRupiah(subtotal);
-        cartDiscountMobile.textContent = formatRupiah(discount);
         cartTotalMobile.textContent = formatRupiah(total);
 
         // Pastikan badge tidak lepas dari ikon keranjang
@@ -2054,6 +2054,39 @@ function removeFromCart(productId) {
     } catch (error) {
         console.error('Error removing product from cart:', error);
         showError('Gagal menghapus produk dari keranjang: ' + error.message);
+    }
+}
+
+// Hapus semua keranjang (clear entire cart)
+function clearCart() {
+    try {
+        console.log('Clearing entire cart');
+        console.log('Current state.cart before:', state.cart);
+
+        // Update state to clear cart
+        updateState({ cart: [] });
+
+        console.log('Current state.cart after:', state.cart);
+
+        // Sync legacy variables
+        syncLegacyVariables();
+
+        // Re-render cart UI
+        renderCart();
+
+        // Update mobile cart
+        updateMobileCart();
+
+        // Save session data after cart update
+        if (state.user) {
+            saveSessionData();
+        }
+
+        console.log('Cart cleared successfully');
+
+    } catch (error) {
+        console.error('Error clearing cart:', error);
+        showError('Gagal menghapus keranjang: ' + error.message);
     }
 }
 
@@ -2581,7 +2614,7 @@ async function processPayment() {
         successMessage += `<p>Bayar: ${formatRupiah(amountPaid)}</p>`;
 
         if (change === 0) {
-            successMessage += `<p>Kembalian: <strong>Uang Pas / Tidak Ada Kembalian</strong></p>`;
+            successMessage += `<p>Kembalian: Uang Pas / Tidak Ada Kembalian</p>`;
         } else {
             successMessage += `<p>Kembalian: ${formatRupiah(change)}</p>`;
         }
@@ -2817,6 +2850,24 @@ document.addEventListener('DOMContentLoaded', function () {
         checkoutModal.classList.add('active');
         document.body.style.overflow = 'hidden'; // Mencegah scroll pada background
     });
+
+    // Tombol batal (hapus keranjang)
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin menghapus semua item di keranjang?')) {
+                clearCart();
+            }
+        });
+    }
+
+    // Tombol batal mobile (hapus keranjang)
+    if (cancelBtnMobile) {
+        cancelBtnMobile.addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin menghapus semua item di keranjang?')) {
+                clearCart();
+            }
+        });
+    }
 
     // Form produk
     productForm.addEventListener('submit', async (e) => {

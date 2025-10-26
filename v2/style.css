@@ -223,7 +223,9 @@ body {
     box-shadow:
         0 12px 35px rgba(255, 159, 67, 0.5),
         0 8px 20px rgba(255, 159, 67, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 0 10px #ff0000,
+        0 0 20px #ff0000;
 }
 
 .floating-action-btn:active {
@@ -276,6 +278,11 @@ body {
             0 3px 10px rgba(255, 159, 67, 0.2);
     }
 
+    /* Make add-to-cart button visible on mobile */
+    .add-to-cart {
+        opacity: 1;
+    }
+
     .floating-action-btn:hover {
         transform: translateY(-6px) scale(1.03);
         box-shadow:
@@ -318,6 +325,13 @@ body {
 
     .nav-item:hover .nav-icon {
         filter: drop-shadow(0 0 12px rgba(0, 168, 204, 0.4));
+    }
+
+    /* Remove background-color, border-radius, box-shadow on login-card for mobile */
+    .login-card {
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
     }
 }
 
@@ -382,7 +396,7 @@ body {
 
 .login-card {
     background-color: white;
-    padding: var(--spacing-xl);
+    padding: 40px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     width: 100%;
@@ -466,55 +480,7 @@ body {
     font-weight: bold;
 }
 
-/* Login Page */
-.login-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    text-align: center;
-}
-
-.login-card {
-    background-color: white;
-    padding: 40px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    width: 100%;
-    max-width: 400px;
-}
-
-.login-card h2 {
-    margin-bottom: 20px;
-    color: var(--primary-color);
-}
-
-.login-card p {
-    margin-bottom: 30px;
-    color: #666;
-}
-
-.login-btn {
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    transition: var(--transition);
-}
-
-.login-btn:hover {
-    background-color: #3367d6;
-}
+/* Login Page styles are defined above with mobile overrides in media query */
 
 /* Kasir Page */
 .kasir-layout {
@@ -1151,9 +1117,21 @@ body {
     padding: var(--spacing-lg);
 }
 
+.cart-summary .button-container {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.cart-summary .checkout-btn,
+.cart-summary .cancel-btn {
+    flex: 1;
+    margin-top: 0;
+}
+
 .checkout-btn {
-    background-color: var(--accent-color);
-    color: white;
+    background-color: var(--light-color);
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
@@ -1166,10 +1144,37 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-md);
+    box-shadow: 0 0 5px #ff0000;
 }
 
 .checkout-btn:hover {
     background-color: #e88f2a;
+    color: white;
+    /* box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; */
+}
+
+.cancel-btn {
+    background-color: var(--light-color);
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 14px;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+    color: white;
 }
 
 .empty-cart {
@@ -1841,6 +1846,10 @@ body {
     align-items: flex-start;
     margin-bottom: var(--spacing-md);
     gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
 }
 
 .cart-item-name-mobile {
@@ -1986,6 +1995,18 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.cart-summary-mobile .button-container {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.cart-summary-mobile .checkout-btn,
+.cart-summary-mobile .cancel-btn {
+    flex: 1;
+    margin-top: 0;
+}
+
 .cart-summary-mobile h3 {
     font-size: 1.1rem;
     font-weight: 700;
@@ -2058,6 +2079,30 @@ body {
 
 .checkout-btn-mobile:active {
     transform: translateY(0);
+}
+
+.cancel-btn {
+    background-color: var(--light-color);
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 14px;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333;
+    color: cyan;
 }
 
 /* Clean cart actions layout */
@@ -2365,7 +2410,7 @@ body {
 
 .change-info span {
     font-weight: bold;
-    font-size: 1.1rem;
+    /* font-size: 1.1rem; */
     color: var(--success-color);
 }
 
@@ -2617,6 +2662,12 @@ body {
     color: white;
     flex: 2;
     /* Make Confirm button wider */
+    /* box-shadow: 0 0 5px #ff0000; */
+}
+
+.btn-primary:hover {
+    background-color: #0089a8;
+    /* box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; */
 }
 
 .btn-secondary {
@@ -2782,8 +2833,8 @@ body {
 
 /* Consistent Checkout Button */
 .checkout-btn {
-    background-color: var(--accent-color);
-    color: white;
+    background-color: var(--light-color);
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: var(--border-radius);
     padding: 14px;

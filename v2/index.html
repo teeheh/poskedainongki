@@ -18,7 +18,7 @@
                 <h2><i class="fas fa-coffee"></i> POS Kedai Nongki</h2>
                 <p>Silakan login untuk mengakses sistem kasir</p>
                 <button id="login-btn" class="login-btn">
-                    <i class="fab fa-google"></i> Login dengan Google
+                    <i class="fab fa-google"></i> Google
                 </button>
                 <div id="login-status" class="mt-3" style="color: #666; font-size: 0.9rem;"></div>
             </div>
@@ -64,9 +64,14 @@
                             <span>Total:</span>
                             <span id="cart-total">Rp 0</span>
                         </div>
-                        <button class="checkout-btn" id="checkout-btn">
-                            <i class="fas fa-credit-card"></i> Proses Pembayaran
-                        </button>
+                        <div class="button-container">
+                            <button class="checkout-btn" id="checkout-btn">
+                                <i class="fas fa-credit-card"></i> Proses
+                            </button>
+                            <button class="cancel-btn" id="cancel-btn">
+                                <i class="fas fa-trash"></i> Batal
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -458,10 +463,10 @@
             </div>
 
             <div class="form-actions">
-                <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
                 <button type="button" class="btn btn-primary" id="confirm-payment">
                     <span id="confirm-payment-text">Bayar</span>
                 </button>
+                <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
             </div>
         </div>
     </div>
@@ -492,9 +497,14 @@
                         <span>Total:</span>
                         <span id="cart-total-mobile">Rp 0</span>
                     </div>
-                    <button class="checkout-btn" id="checkout-btn-mobile">
-                        <i class="fas fa-credit-card"></i> Proses Pembayaran
-                    </button>
+                    <div class="button-container">
+                        <button class="checkout-btn" id="checkout-btn-mobile">
+                            <i class="fas fa-credit-card"></i> Proses
+                        </button>
+                        <button class="cancel-btn" id="cancel-btn-mobile">
+                            <i class="fas fa-trash"></i> Batal
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
