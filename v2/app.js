@@ -1540,6 +1540,7 @@ function renderProducts(categoryId = 'all') {
             productCard.className = 'product-card';
             productCard.innerHTML = `
                 <div class="product-image">
+                    <div class="product-price">${formatRupiah(product.price || 0)}</div>
                     ${product.image ?
                     `<img src="${product.image}" alt="${product.name}">` :
                     `<i class="fas fa-coffee"></i>`
@@ -1547,7 +1548,6 @@ function renderProducts(categoryId = 'all') {
                 </div>
                 <div class="product-info">
                     <div class="product-name">${product.name || 'Produk Tanpa Nama'}</div>
-                    <div class="product-price">${formatRupiah(product.price || 0)}</div>
                 </div>
 
             `;
