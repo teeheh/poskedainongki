@@ -586,7 +586,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 2000;
     overflow-y: auto;
     padding: var(--spacing-lg);
 }
@@ -1454,7 +1454,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 2000;
     align-items: center;
     justify-content: center;
 }
