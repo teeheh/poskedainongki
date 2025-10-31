@@ -99,6 +99,36 @@ body {
     color: var(--dark-color);
 }
 
+
+[data-theme="dark"] .select-button {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 15px;
+    border: 2px solid #dee2e6;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .status-select-button {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
 /* Payment Cards */
 .payment-cards {
     display: grid;
@@ -323,11 +353,6 @@ body {
     transition: all 0.1s ease;
 }
 
-/* Dark mode floating action button positioning */
-[data-theme="dark"] .floating-action-btn {
-    bottom: 140px;
-}
-
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     .header {
@@ -375,7 +400,7 @@ body {
 
     /* Mobile dark mode floating action button positioning */
     [data-theme="dark"] .floating-action-btn {
-        bottom: 130px;
+        bottom: 110px;
     }
 
     /* Make add-to-cart button visible on mobile */
@@ -813,8 +838,11 @@ input:checked+.slider:before {
 
 /* Dark mode modal content */
 [data-theme="dark"] .modal-content {
-    background-color: var(--light-color);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.98) 0%, rgba(44, 62, 80, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 @keyframes modalFadeIn {
@@ -949,6 +977,13 @@ input:checked+.slider:before {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Dark mode for transaction summary card */
+[data-theme="dark"] .transaction-summary-card {
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .summary-item {
     display: flex;
     justify-content: space-between;
@@ -974,6 +1009,15 @@ input:checked+.slider:before {
     text-align: right;
 }
 
+/* Dark mode for summary labels and values */
+[data-theme="dark"] .summary-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .summary-value {
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .total-item {
     padding-top: var(--spacing-sm);
     border-top: 2px solid #e9ecef;
@@ -984,6 +1028,15 @@ input:checked+.slider:before {
 .total-value {
     color: var(--primary-color);
     font-size: 1.1rem;
+}
+
+/* Dark mode for total item and value */
+[data-theme="dark"] .total-item {
+    border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .total-value {
+    color: var(--primary-color);
 }
 
 .detail-section-title {
@@ -998,6 +1051,16 @@ input:checked+.slider:before {
     border: 1px solid #e9ecef;
     border-radius: var(--border-radius);
     overflow: hidden;
+}
+
+/* Dark mode for detail section title and items container */
+[data-theme="dark"] .detail-section-title {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .detail-items-container {
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .detail-items-list {
@@ -1037,6 +1100,23 @@ input:checked+.slider:before {
     font-weight: 600;
     color: var(--dark-color);
     min-width: 80px;
+}
+
+/* Dark mode for detail item elements */
+[data-theme="dark"] .detail-item-name {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .detail-item-quantity {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .detail-item-price {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .detail-item-row {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Responsivitas mobile untuk detail transaksi */
@@ -1535,6 +1615,113 @@ input:checked+.slider:before {
     color: rgba(255, 255, 255, 0.8);
 }
 
+/* Enhanced dark mode for pengaturan data tables */
+/* Base pengaturan data table styles */
+[data-theme="dark"] .pengaturan-container .data-table th {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pengaturan-container .data-table td {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Color variants for different tabs */
+/* Produk (Products) - Blue/Cyan theme */
+[data-theme="dark"] .tab-content[data-tab="produk"] .data-table th,
+[data-theme="dark"] #produk-tab .data-table th {
+    background: linear-gradient(145deg, rgba(52, 152, 219, 0.95) 0%, rgba(41, 128, 185, 0.95) 100%);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+[data-theme="dark"] .tab-content[data-tab="produk"] .data-table td,
+[data-theme="dark"] #produk-tab .data-table td {
+    background: rgba(52, 152, 219, 0.08);
+}
+
+[data-theme="dark"] .tab-content[data-tab="produk"] .data-table tr:nth-child(even) td,
+[data-theme="dark"] #produk-tab .data-table tr:nth-child(even) td {
+    background: rgba(52, 152, 219, 0.05);
+}
+
+[data-theme="dark"] .tab-content[data-tab="produk"] .data-table tr:hover td,
+[data-theme="dark"] #produk-tab .data-table tr:hover td {
+    background: rgba(52, 152, 219, 0.15);
+    color: rgba(255, 255, 255, 0.98);
+    border-color: rgba(52, 152, 219, 0.4);
+}
+
+/* Kategori (Categories) - Purple/Violet theme */
+[data-theme="dark"] .tab-content[data-tab="kategori"] .data-table th,
+[data-theme="dark"] #kategori-tab .data-table th {
+    background: linear-gradient(145deg, rgba(155, 89, 182, 0.95) 0%, rgba(142, 68, 173, 0.95) 100%);
+    border-color: rgba(155, 89, 182, 0.3);
+}
+
+[data-theme="dark"] .tab-content[data-tab="kategori"] .data-table td,
+[data-theme="dark"] #kategori-tab .data-table td {
+    background: rgba(155, 89, 182, 0.08);
+}
+
+[data-theme="dark"] .tab-content[data-tab="kategori"] .data-table tr:nth-child(even) td,
+[data-theme="dark"] #kategori-tab .data-table tr:nth-child(even) td {
+    background: rgba(155, 89, 182, 0.05);
+}
+
+[data-theme="dark"] .tab-content[data-tab="kategori"] .data-table tr:hover td,
+[data-theme="dark"] #kategori-tab .data-table tr:hover td {
+    background: rgba(155, 89, 182, 0.15);
+    color: rgba(255, 255, 255, 0.98);
+    border-color: rgba(155, 89, 182, 0.4);
+}
+
+/* Transaksi (Transactions) - Green/Teal theme */
+[data-theme="dark"] .tab-content[data-tab="transaksi"] .data-table th,
+[data-theme="dark"] #transaksi-tab .data-table th {
+    background: linear-gradient(145deg, rgba(26, 188, 156, 0.95) 0%, rgba(22, 160, 133, 0.95) 100%);
+    border-color: rgba(26, 188, 156, 0.3);
+}
+
+[data-theme="dark"] .tab-content[data-tab="transaksi"] .data-table td,
+[data-theme="dark"] #transaksi-tab .data-table td {
+    background: rgba(26, 188, 156, 0.08);
+}
+
+[data-theme="dark"] .tab-content[data-tab="transaksi"] .data-table tr:nth-child(even) td,
+[data-theme="dark"] #transaksi-tab .data-table tr:nth-child(even) td {
+    background: rgba(26, 188, 156, 0.05);
+}
+
+[data-theme="dark"] .tab-content[data-tab="transaksi"] .data-table tr:hover td,
+[data-theme="dark"] #transaksi-tab .data-table tr:hover td {
+    background: rgba(26, 188, 156, 0.15);
+    color: rgba(255, 255, 255, 0.98);
+    border-color: rgba(26, 188, 156, 0.4);
+}
+
+/* Fallback for general pengaturan data tables without specific tab context */
+[data-theme="dark"] .pengaturan-container .data-table th {
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .pengaturan-container .data-table td {
+    background: rgba(52, 73, 94, 0.1);
+}
+
+[data-theme="dark"] .pengaturan-container .data-table tr:nth-child(even) td {
+    background: rgba(44, 62, 80, 0.05);
+}
+
+[data-theme="dark"] .pengaturan-container .data-table tr:hover td {
+    background: rgba(0, 168, 204, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+}
+
 /* Enhanced dark mode for search boxes */
 [data-theme="dark"] .search-box {
     background-color: rgba(52, 73, 94, 0.5);
@@ -1543,6 +1730,17 @@ input:checked+.slider:before {
 
 [data-theme="dark"] .search-box input::placeholder {
     color: rgba(255, 255, 255, 0.5);
+}
+
+/* Dark mode for filter box in transaction tab */
+[data-theme="dark"] .filter-box input[type="date"] {
+    background-color: rgba(52, 73, 94, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .filter-box label {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .pengaturan-tabs {
@@ -1674,6 +1872,21 @@ input:checked+.slider:before {
         font-weight: 600;
         float: left;
         text-align: left;
+    }
+
+    /* Dark mode for mobile table cards */
+    [data-theme="dark"] .data-table tbody tr {
+        background: linear-gradient(145deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.95) 100%);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .data-table td {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-theme="dark"] .data-table td:before {
+        color: rgba(255, 255, 255, 0.9);
     }
 }
 
@@ -2665,7 +2878,7 @@ input:checked+.slider:before {
     }
 
     .cart-item-info-mobile {
-        flex-direction: column;
+        /* flex-direction: column; */
         align-items: flex-start;
         gap: var(--spacing-xs);
     }
@@ -3152,6 +3365,32 @@ input:checked+.slider:before {
     /* Make Cancel button narrower */
 }
 
+/* Dark mode modal button colors */
+[data-theme="dark"] .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 168, 204, 0.3);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: #00d4ff;
+    box-shadow: 0 6px 16px rgba(0, 212, 255, 0.4);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
 /* Success Modal */
 #success-modal .modal-content {
     text-align: center;
@@ -3215,6 +3454,32 @@ input:checked+.slider:before {
 .btn-secondary {
     background-color: #6c757d;
     color: white;
+}
+
+/* Dark mode button colors for modal content */
+[data-theme="dark"] .modal-content .btn-primary {
+    background-color: var(--light-color);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 168, 204, 0.3);
+}
+
+[data-theme="dark"] .modal-content .btn-primary:hover {
+    background-color: #00d4ff;
+    box-shadow: 0 6px 16px rgba(0, 212, 255, 0.4);
+}
+
+[data-theme="dark"] .modal-content .btn-secondary {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .modal-content .btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
 }
 
 /* Consistent Form Elements */
@@ -3555,4 +3820,23 @@ h6 {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+}
+
+/* Pastikan FAB tetap fixed di dark mode */
+[data-theme="dark"] .floating-action-btn {
+    position: fixed !important;
+    bottom: 120px !important;
+    right: 20px !important;
+    z-index: 3000 !important;
+    transform: translateZ(0);
+}
+
+/* Hindari konteks baru untuk elemen blur */
+[data-theme="dark"] .pengaturan-container,
+[data-theme="dark"] .cart-container {
+    transform: none !important;
+    contain: none !important;
+    perspective: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
