@@ -1,60 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Enhanced POS System</title>
-    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
-    <link as="style"
-        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Manrope%3Awght%40400%3B500%3B700%3B800"
-        onload="this.rel='stylesheet'" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#1173d4",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
-                    },
-                    fontFamily: {
-                        "display": ["Manrope"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                },
-            },
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Kedai Nongki</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display">
-    <div class="cart-overlay" id="cartOverlay" style="display: none;"></div>
-
-    <!-- Mobile menu button -->
-    <div class="mobile-menu fixed top-4 left-4 z-50">
-        <button id="mobileMenuBtn" class="p-2 rounded-lg bg-primary text-white">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-    </div>
-
+<body>
     <!-- Halaman Login -->
     <div id="login-page" class="page active">
         <div class="login-container">
             <div class="login-card">
                 <h2><i class="fas fa-coffee"></i> POS Kedai Nongki</h2>
                 <p>Silakan login untuk mengakses sistem kasir</p>
-                <button id="login-btn" class="login-btn" type="button">
-                    <i class="fab fa-google"></i> Login dengan Google
+                <button id="login-btn" class="login-btn">
+                    <i class="fab fa-google"></i> Google
                 </button>
                 <div id="login-status" class="mt-3" style="color: #666; font-size: 0.9rem;"></div>
             </div>
@@ -62,871 +26,524 @@
     </div>
 
     <!-- Halaman Utama (Kasir) -->
-    <div id="main-app" class="page">
-        <div class="flex h-screen">
-            <aside id="sidebar" class="w-24 bg-transparent flex flex-col items-center py-6">
-                <div class="text-primary mb-12">
-                    <svg class="w-10 h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                            fill="currentColor"></path>
-                    </svg>
+    <div id="kasir-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-cash-register"></i> Kasir</h1>
+                <div class="user-info">
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="theme-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </div>
+                    <span id="user-name">User</span>
                 </div>
-                <nav class="flex flex-col items-center space-y-8 text-slate-500 dark:text-slate-400">
-                    <a class="p-4 rounded-xl bg-primary/10 text-primary shadow-md shadow-primary/20" href="#"
-                        data-page="produk">
-                        <span class="material-symbols-outlined !text-3xl">storefront</span>
-                    </a>
-                    <a class="p-4 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" data-page="keranjang-page">
-                        <span class="material-symbols-outlined !text-3xl">shopping_cart</span>
-                    </a>
-                    <a class="p-4 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" data-page="pengaturan-page">
-                        <span class="material-symbols-outlined !text-3xl">settings</span>
-                    </a>
-                </nav>
-                <div class="mt-auto">
-                    <a class="p-4 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" id="logout-btn">
-                        <span class="material-symbols-outlined !text-3xl">logout</span>
-                    </a>
-                </div>
-            </aside>
+            </div>
 
-            <main class="flex-1 flex overflow-hidden w-full">
-                <div class="flex-1 flex flex-col">
-                    <header
-                        class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-8 py-4 bg-white dark:bg-slate-900/50 rounded-tl-3xl rounded-tr-3xl">
-                        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-200">Kasir</h1>
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-3">
-                                <span class="font-semibold text-slate-700 dark:text-slate-300" id="user-name">teeh
-                                    hehe</span>
-                            </div>
-                            <button id="darkModeToggle"
-                                class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                <span
-                                    class="material-symbols-outlined !text-2xl text-slate-600 dark:text-slate-400">dark_mode</span>
+            <div class="kasir-layout">
+                <div class="product-grid-container">
+                    <!-- <h3 class="mb-3">Kategori Produk</h3> -->
+                    <div class="category-list" id="category-list">
+                        <!-- Kategori akan dimuat di sini -->
+                    </div>
+                    <div class="product-grid" id="product-grid">
+                        <!-- Produk akan dimuat di sini -->
+                    </div>
+                </div>
+
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <h3>Keranjang</h3>
+                        <span id="cart-count">0 item</span>
+                    </div>
+                    <div class="cart-items" id="cart-items">
+                        <!-- Item keranjang akan dimuat di sini -->
+                    </div>
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">Rp 0</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total:</span>
+                            <span id="cart-total">Rp 0</span>
+                        </div>
+                        <div class="button-container">
+                            <button class="checkout-btn" id="checkout-btn">
+                                <i class="fas fa-credit-card"></i> Proses
                             </button>
-                            <div class="relative p-2 text-slate-600 dark:text-slate-400 cursor-pointer" id="cartButton">
-                                <span class="material-symbols-outlined !text-3xl">shopping_cart</span>
-                                <span
-                                    class="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
-                                    id="cartCount">0</span>
-                            </div>
-                        </div>
-                    </header>
-
-                    <div
-                        class="flex-1 flex flex-col p-8 overflow-y-auto bg-white dark:bg-slate-900/50 rounded-bl-3xl rounded-br-3xl">
-                        <div class="space-y-6 mb-6">
-                            <div class="relative">
-                                <span
-                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                                <input
-                                    class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 focus:ring-primary focus:border-primary"
-                                    placeholder="Cari produk..." type="text" id="searchInput" />
-                            </div>
-                            <div class="flex items-center space-x-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1"
-                                id="category-list">
-                                <a class="py-3 px-1 border-b-2 border-primary text-primary font-semibold category-btn active"
-                                    href="#" data-category="all">Semua</a>
-                                <!-- Kategori akan dimuat di sini -->
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 product-grid"
-                            id="product-grid">
-                            <!-- Produk akan dimuat di sini -->
+                            <button class="cancel-btn" id="cancel-btn">
+                                <i class="fas fa-trash"></i> Batal
+                            </button>
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
-
-    <div class="cart-panel" id="cartPanel">
-        <div class="cart-panel-header">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200">Keranjang Belanja</h2>
-                <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    id="closeCartBtn">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
             </div>
-        </div>
-
-        <div class="cart-panel-body">
-            <div id="cartItems">
-                <div class="empty-cart-state" id="emptyCartMessage">
-                    <div class="empty-cart-icon">
-                        <span class="material-symbols-outlined !text-4xl text-slate-400">shopping_cart</span>
-                    </div>
-                    <h3>Keranjang Kosong</h3>
-                    <p>Belum ada produk yang ditambahkan ke keranjang</p>
-                </div>
-                <!-- Cart items will be added here dynamically -->
-            </div>
-        </div>
-
-        <div class="cart-panel-footer">
-            <div class="cart-summary-enhanced">
-                <div class="summary-item">
-                    <span class="summary-label">Subtotal:</span>
-                    <span id="subtotal" class="summary-value">Rp 0</span>
-                </div>
-                <div class="summary-item total-item">
-                    <span class="summary-label">Total:</span>
-                    <span id="total" class="summary-value total-amount">Rp 0</span>
-                </div>
-            </div>
-            <button class="checkout-btn-enhanced" id="checkoutBtn">
-                <span class="material-symbols-outlined">payment</span>
-                Proses Pembayaran
-            </button>
         </div>
     </div>
 
     <!-- Halaman Pengaturan -->
-    <div id="pengaturan-page" class="page" style="display: none;">
-        <div class="flex h-screen">
-            <aside id="sidebar-settings" class="w-24 bg-transparent flex flex-col items-center py-6">
-                <div class="text-primary mb-12">
-                    <svg class="w-10 h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                            fill="currentColor"></path>
-                    </svg>
-                </div>
-                <nav class="flex flex-col items-center space-y-8 text-slate-500 dark:text-slate-400">
-                    <a class="p-4 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" data-page="produk-page">
-                        <span class="material-symbols-outlined !text-3xl">storefront</span>
-                    </a>
-                    <a class="p-4 rounded-xl bg-primary/10 text-primary shadow-md shadow-primary/20" href="#"
-                        data-page="keranjang-page">
-                        <span class="material-symbols-outlined !text-3xl">shopping_cart</span>
-                    </a>
-                    <a class="p-4 rounded-xl bg-primary/10 text-primary shadow-md shadow-primary/20" href="#"
-                        data-page="pengaturan-page">
-                        <span class="material-symbols-outlined !text-3xl">settings</span>
-                    </a>
-                </nav>
-                <div class="mt-auto">
-                    <a class="p-4 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" id="logout-btn-settings">
-                        <span class="material-symbols-outlined !text-3xl">logout</span>
-                    </a>
-                </div>
-            </aside>
-
-            <main class="flex-1 flex overflow-hidden w-full">
-                <div class="flex-1 flex flex-col">
-                    <header
-                        class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-8 py-4 bg-white dark:bg-slate-900/50 rounded-tl-3xl rounded-tr-3xl">
-                        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-200">Pengaturan</h1>
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-3">
-                                <span class="font-semibold text-slate-700 dark:text-slate-300"
-                                    id="user-name-settings">User</span>
-                            </div>
-                            <button id="darkModeToggle-settings"
-                                class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                <span
-                                    class="material-symbols-outlined !text-2xl text-slate-600 dark:text-slate-400">dark_mode</span>
-                            </button>
-                        </div>
-                    </header>
-
-                    <div
-                        class="flex-1 flex flex-col p-8 overflow-y-auto bg-white dark:bg-slate-900/50 rounded-bl-3xl rounded-br-3xl">
-                        <div class="settings-main-content">
-                            <!-- Statistics Cards -->
-                            <div class="stats-grid" id="settings-stats">
-                                <!-- Statistics will be loaded here -->
-                            </div>
-
-                            <!-- Settings Container -->
-                            <div class="enhanced-settings-container">
-                                <!-- Enhanced Tab Navigation -->
-                                <div class="enhanced-tabs-nav">
-                                    <div class="tabs-scroll-container">
-                                        <button class="enhanced-tab-btn active" data-tab="produk">
-                                            <span class="material-symbols-outlined tab-icon">inventory_2</span>
-                                            <span class="tab-text">Produk</span>
-                                            <span class="tab-badge" id="produk-count">0</span>
-                                        </button>
-                                        <button class="enhanced-tab-btn" data-tab="kategori">
-                                            <span class="material-symbols-outlined tab-icon">category</span>
-                                            <span class="tab-text">Kategori</span>
-                                            <span class="tab-badge" id="kategori-count">0</span>
-                                        </button>
-                                        <button class="enhanced-tab-btn" data-tab="pembayaran">
-                                            <span class="material-symbols-outlined tab-icon">payment</span>
-                                            <span class="tab-text">Pembayaran</span>
-                                            <span class="tab-badge" id="pembayaran-count">0</span>
-                                        </button>
-                                        <button class="enhanced-tab-btn" data-tab="detail_transaksi">
-                                            <span class="material-symbols-outlined tab-icon">receipt_long</span>
-                                            <span class="tab-text">Transaksi</span>
-                                            <span class="tab-badge" id="transaksi-count">0</span>
-                                        </button>
-                                    </div>
-                                    <div class="tabs-actions">
-                                        <button class="export-btn" id="export-data-btn" title="Export Data">
-                                            <span class="material-symbols-outlined">download</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Enhanced Tab Contents -->
-                                <div class="enhanced-tab-content">
-                                    <!-- Produk Tab -->
-                                    <div id="produk-tab" class="tab-pane active">
-                                        <div class="tab-pane-header">
-                                            <div class="search-section">
-                                                <div class="enhanced-search-box">
-                                                    <span class="material-symbols-outlined search-icon">search</span>
-                                                    <input type="text" id="product-search" placeholder="Cari produk...">
-                                                    <button class="search-clear-btn" id="product-search-clear">
-                                                        <span class="material-symbols-outlined">close</span>
-                                                    </button>
-                                                </div>
-                                                <div class="filter-actions">
-                                                    <select class="filter-select" id="product-status-filter">
-                                                        <option value="all">Semua Status</option>
-                                                        <option value="Aktif">Aktif</option>
-                                                        <option value="Nonaktif">Nonaktif</option>
-                                                    </select>
-                                                    <select class="filter-select" id="product-category-filter">
-                                                        <option value="all">Semua Kategori</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <button class="btn btn-secondary" id="bulk-edit-btn">
-                                                    <span class="material-symbols-outlined">edit_note</span>
-                                                    Edit Massal
-                                                </button>
-                                                <button class="btn btn-primary" id="add-product-btn">
-                                                    <span class="material-symbols-outlined">add</span>
-                                                    Tambah Produk
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="data-section">
-                                            <div class="table-container">
-                                                <table class="enhanced-data-table" id="produk-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="checkbox-col">
-                                                                <input type="checkbox" class="select-all"
-                                                                    id="select-all-produk">
-                                                            </th>
-                                                            <th class="image-col">Gambar</th>
-                                                            <th class="name-col sortable" data-sort="name">
-                                                                Nama Produk
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="category-col sortable" data-sort="category">
-                                                                Kategori
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="price-col sortable" data-sort="price">
-                                                                Harga
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="status-col">Status</th>
-                                                            <th class="actions-col">Aksi</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="product-table-body">
-                                                        <!-- Data produk akan dimuat di sini -->
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="table-footer">
-                                                <div class="pagination-info" id="produk-pagination-info">
-                                                    Menampilkan 0 dari 0 produk
-                                                </div>
-                                                <div class="pagination-controls" id="produk-pagination">
-                                                    <!-- Pagination controls will be here -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Kategori Tab -->
-                                    <div id="kategori-tab" class="tab-pane">
-                                        <div class="tab-pane-header">
-                                            <div class="search-section">
-                                                <div class="enhanced-search-box">
-                                                    <span class="material-symbols-outlined search-icon">search</span>
-                                                    <input type="text" id="category-search"
-                                                        placeholder="Cari kategori...">
-                                                    <button class="search-clear-btn" id="category-search-clear">
-                                                        <span class="material-symbols-outlined">close</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <button class="btn btn-primary" id="add-category-btn">
-                                                    <span class="material-symbols-outlined">add</span>
-                                                    Tambah Kategori
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="data-section">
-                                            <div class="table-container">
-                                                <table class="enhanced-data-table" id="kategori-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="name-col">Nama Kategori</th>
-                                                            <th class="order-col sortable" data-sort="order">
-                                                                Urutan
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="status-col">Status</th>
-                                                            <th class="actions-col">Aksi</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="category-table-body">
-                                                        <!-- Data kategori akan dimuat di sini -->
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pembayaran Tab -->
-                                    <div id="pembayaran-tab" class="tab-pane">
-                                        <div class="tab-pane-header">
-                                            <div class="search-section">
-                                                <div class="enhanced-search-box">
-                                                    <span class="material-symbols-outlined search-icon">search</span>
-                                                    <input type="text" id="payment-search"
-                                                        placeholder="Cari metode pembayaran...">
-                                                    <button class="search-clear-btn" id="payment-search-clear">
-                                                        <span class="material-symbols-outlined">close</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <button class="btn btn-primary" id="add-payment-btn">
-                                                    <span class="material-symbols-outlined">add</span>
-                                                    Tambah Metode
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="data-section">
-                                            <div class="enhanced-cards-grid" id="payment-cards">
-                                                <!-- Data pembayaran akan dimuat di sini sebagai cards -->
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Transaksi Tab -->
-                                    <div id="detail_transaksi-tab" class="tab-pane">
-                                        <div class="tab-pane-header">
-                                            <div class="search-section">
-                                                <div class="enhanced-search-box">
-                                                    <span class="material-symbols-outlined search-icon">search</span>
-                                                    <input type="text" id="transaction-search"
-                                                        placeholder="Cari transaksi...">
-                                                    <button class="search-clear-btn" id="transaction-search-clear">
-                                                        <span class="material-symbols-outlined">close</span>
-                                                    </button>
-                                                </div>
-                                                <div class="filter-actions">
-                                                    <input type="date" id="date-filter-from" class="filter-select"
-                                                        placeholder="Dari Tanggal">
-                                                    <input type="date" id="date-filter-to" class="filter-select"
-                                                        placeholder="Sampai Tanggal">
-                                                    <select class="filter-select" id="transaction-status-filter">
-                                                        <option value="all">Semua Status</option>
-                                                        <option value="Berhasil">Berhasil</option>
-                                                        <option value="Pending">Pending</option>
-                                                        <option value="Batal">Batal</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <button class="btn btn-secondary" id="export-transactions-btn">
-                                                    <span class="material-symbols-outlined">download</span>
-                                                    Export
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="data-section">
-                                            <div class="table-container">
-                                                <table class="enhanced-data-table" id="transaksi-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="id-col">ID Transaksi</th>
-                                                            <th class="date-col sortable" data-sort="date">
-                                                                Tanggal
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="amount-col sortable" data-sort="total">
-                                                                Total
-                                                                <span class="sort-indicator"></span>
-                                                            </th>
-                                                            <th class="method-col">Metode</th>
-                                                            <th class="status-col">Status</th>
-                                                            <th class="actions-col">Aksi</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="transaction-table-body">
-                                                        <!-- Data transaksi akan dimuat di sini -->
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div id="pengaturan-page" class="page">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-cog"></i> Pengaturan</h1>
+                <div class="user-info">
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="theme-toggle-settings">
+                            <span class="slider round"></span>
+                        </label>
+                        <i class="fas fa-moon" id="theme-icon-settings"></i>
                     </div>
-            </main>
-        </div>
-
-        <!-- Enhanced Floating Action Button -->
-        <div class="enhanced-fab-container" id="fab-container">
-            <button class="enhanced-fab primary" id="main-fab">
-                <span class="material-symbols-outlined">add</span>
-            </button>
-            <div class="fab-menu" id="fab-menu">
-                <button class="enhanced-fab secondary" id="fab-add-product" data-tooltip="Tambah Produk">
-                    <span class="material-symbols-outlined">inventory_2</span>
-                </button>
-                <button class="enhanced-fab secondary" id="fab-add-category" data-tooltip="Tambah Kategori">
-                    <span class="material-symbols-outlined">category</span>
-                </button>
-                <button class="enhanced-fab secondary" id="fab-add-payment" data-tooltip="Tambah Pembayaran">
-                    <span class="material-symbols-outlined">payment</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Modal Detail Transaksi -->
-        <div id="transaction-detail-modal" class="modal" style="display: none; opacity: 0;">
-            <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <div class="modal-title-section">
-                        <h3>Detail Transaksi</h3>
-                        <span class="transaction-id-badge" id="detail-transaction-id">TRX-001</span>
-                    </div>
-                    <button class="close-btn" id="close-transaction-detail">&times;</button>
-                </div>
-
-                <div class="modal-body">
-                    <!-- Transaction Summary -->
-                    <div class="transaction-summary-enhanced">
-                        <div class="summary-grid">
-                            <div class="summary-card primary">
-                                <div class="summary-icon">
-                                    <span class="material-symbols-outlined">receipt_long</span>
-                                </div>
-                                <div class="summary-content">
-                                    <span class="summary-label">ID Transaksi</span>
-                                    <span class="summary-value" id="detail-transaction-id-display">TRX-001</span>
-                                </div>
-                            </div>
-
-                            <div class="summary-card">
-                                <div class="summary-icon">
-                                    <span class="material-symbols-outlined">event_available</span>
-                                </div>
-                                <div class="summary-content">
-                                    <span class="summary-label">Tanggal & Waktu</span>
-                                    <span class="summary-value" id="detail-transaction-date">01 Jan 2024, 10:30</span>
-                                </div>
-                            </div>
-
-                            <div class="summary-card">
-                                <div class="summary-icon">
-                                    <span class="material-symbols-outlined">payment</span>
-                                </div>
-                                <div class="summary-content">
-                                    <span class="summary-label">Metode Pembayaran</span>
-                                    <span class="summary-value" id="detail-payment-method">Tunai</span>
-                                </div>
-                            </div>
-
-                            <div class="summary-card success">
-                                <div class="summary-icon">
-                                    <span class="material-symbols-outlined">check_circle</span>
-                                </div>
-                                <div class="summary-content">
-                                    <span class="summary-label">Status</span>
-                                    <span class="summary-value status-badge success"
-                                        id="detail-transaction-status">Berhasil</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="summary-total-card">
-                            <div class="total-amount-section">
-                                <span class="total-label">Total Pembayaran</span>
-                                <span class="total-amount" id="detail-transaction-total">Rp 150.000</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Transaction Items -->
-                    <div class="transaction-items-section">
-                        <h4 class="section-title">
-                            <span class="material-symbols-outlined">shopping_bag</span>
-                            Detail Item
-                        </h4>
-                        <div class="items-container" id="transaction-items-body">
-                            <!-- Detail item transaksi akan dimuat di sini -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button id="print-transaction-detail" class="btn btn-secondary">
-                        <span class="material-symbols-outlined">print</span>
-                        Cetak
-                    </button>
-                    <button id="download-transaction-pdf" class="btn btn-secondary">
-                        <span class="material-symbols-outlined">download</span>
-                        Download PDF
-                    </button>
-                    <button id="close-detail-btn" class="btn btn-primary">Tutup</button>
+                    <span id="user-name-settings">User</span>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Halaman Keranjang -->
-    <div id="keranjang-page" class="page" style="display: none;">
-        <div class="flex h-screen">
-            <aside id="sidebar-keranjang" class="w-24 bg-transparent flex flex-col items-center py-6">
-                <div class="text-primary mb-12">
-                    <svg class="w-10 h-10" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                            fill="currentColor"></path>
-                    </svg>
+            <div class="pengaturan-container">
+                <div class="pengaturan-tabs">
+                    <button class="tab-btn active" data-tab="produk">Produk</button>
+                    <button class="tab-btn" data-tab="kategori">Kategori</button>
+                    <button class="tab-btn" data-tab="pembayaran">Pembayaran</button>
+                    <button class="tab-btn" data-tab="detail_transaksi">Transaksi</button>
                 </div>
-                <nav class="flex flex-col items-center space-y-8 text-slate-500 dark:text-slate-400">
-                    <a class="p-4 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" data-page="produk-page">
-                        <span class="material-symbols-outlined !text-3xl">storefront</span>
-                    </a>
-                    <a class="p-4 rounded-xl bg-primary/10 text-primary shadow-md shadow-primary/20" href="#"
-                        data-page="keranjang-page">
-                        <span class="material-symbols-outlined !text-3xl">shopping_cart</span>
-                    </a>
-                    <a class="p-4 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" data-page="pengaturan-page">
-                        <span class="material-symbols-outlined !text-3xl">settings</span>
-                    </a>
-                </nav>
-                <div class="mt-auto">
-                    <a class="p-4 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:shadow-lg transition-all duration-300"
-                        href="#" id="logout-btn-keranjang">
-                        <span class="material-symbols-outlined !text-3xl">logout</span>
-                    </a>
-                </div>
-            </aside>
 
-            <main class="flex-1 flex overflow-hidden">
-                <div class="flex-1 flex flex-col">
-                    <header
-                        class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-8 py-4 bg-white dark:bg-slate-900/50 rounded-tl-3xl rounded-tr-3xl">
-                        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-200">Keranjang Belanja</h1>
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-3">
-                                <span class="font-semibold text-slate-700 dark:text-slate-300"
-                                    id="user-name-keranjang">User</span>
-                            </div>
-                            <button id="darkModeToggle-keranjang"
-                                class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                <span
-                                    class="material-symbols-outlined !text-2xl text-slate-600 dark:text-slate-400">dark_mode</span>
-                            </button>
+                <div id="produk-tab" class="tab-content active">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="product-search" placeholder="Cari produk...">
                         </div>
-                    </header>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Produk</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body">
+                            <!-- Data produk akan dimuat di sini -->
+                        </tbody>
+                    </table>
 
-                    <div
-                        class="flex-1 flex flex-col p-8 overflow-y-auto bg-white dark:bg-slate-900/50 rounded-bl-3xl rounded-br-3xl">
-                        <div class="cart-page-container">
-                            <div class="cart-page-header">
-                                <div class="cart-summary-card">
+                    <!-- Floating Action Button untuk tambah produk -->
+                    <button class="floating-action-btn" id="add-product-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div id="kategori-tab" class="tab-content">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="category-search" placeholder="Cari kategori...">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Kategori</th>
+                                <th>Urutan</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="category-table-body">
+                            <!-- Data kategori akan dimuat di sini -->
+                        </tbody>
+                    </table>
+
+                    <!-- Floating Action Button untuk tambah kategori -->
+                    <button class="floating-action-btn" id="add-category-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div id="pembayaran-tab" class="tab-content">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="payment-search" placeholder="Cari metode pembayaran...">
+                        </div>
+                    </div>
+
+                    <!-- Card view untuk metode pembayaran -->
+                    <div class="payment-cards" id="payment-cards">
+                        <!-- Data pembayaran akan dimuat di sini sebagai cards -->
+                    </div>
+
+                    <!-- Floating Action Button untuk tambah metode -->
+                    <button class="floating-action-btn" id="add-payment-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div id="detail_transaksi-tab" class="tab-content">
+                    <div class="tab-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="transaction-search" placeholder="Cari transaksi...">
+                        </div>
+                        <div class="filter-box">
+                            <label for="date-filter">Filter Tanggal:</label>
+                            <input type="date" id="date-filter" class="form-control">
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Transaksi</th>
+                                <th>Tanggal</th>
+                                <th>Total</th>
+                                <th>Metode Pembayaran</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body">
+                            <!-- Data transaksi akan dimuat di sini -->
+                        </tbody>
+                    </table>
+
+                    <!-- Modal Detail Transaksi -->
+                    <div id="transaction-detail-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Detail Transaksi</h3>
+                                <span class="close-modal" id="close-transaction-detail">&times;</span>
+                            </div>
+                            <div class="modal-body">
+                                <div class="transaction-summary-card">
                                     <div class="summary-item">
-                                        <span class="summary-label">Total Item:</span>
-                                        <span id="cart-total-items" class="summary-value">0</span>
+                                        <span class="summary-label">ID Transaksi:</span>
+                                        <span id="detail-transaction-id" class="summary-value"></span>
                                     </div>
                                     <div class="summary-item">
-                                        <span class="summary-label">Subtotal:</span>
-                                        <span id="cart-subtotal-page" class="summary-value">Rp 0</span>
+                                        <span class="summary-label">Tanggal:</span>
+                                        <span id="detail-transaction-date" class="summary-value"></span>
                                     </div>
                                     <div class="summary-item">
-                                        <span class="summary-label">Diskon:</span>
-                                        <span class="summary-value">Rp 0</span>
+                                        <span class="summary-label">Metode Bayar:</span>
+                                        <span id="detail-payment-method" class="summary-value"></span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Status:</span>
+                                        <span id="detail-transaction-status"
+                                            class="summary-value status-badge active"></span>
                                     </div>
                                     <div class="summary-item total-item">
                                         <span class="summary-label">Total:</span>
-                                        <span id="cart-total-page" class="summary-value total-value">Rp 0</span>
+                                        <span id="detail-transaction-total" class="summary-value total-value"></span>
+                                    </div>
+                                </div>
+
+                                <h4 class="detail-section-title">Detail Item</h4>
+                                <div class="detail-items-container">
+                                    <div class="detail-items-list" id="transaction-items-body">
+                                        <!-- Detail item transaksi akan dimuat di sini -->
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="cart-items-section">
-                                <div id="cart-items-page">
-                                    <div class="empty-cart-page">
-                                        <div class="empty-cart-icon">
-                                            <span
-                                                class="material-symbols-outlined !text-6xl text-slate-400">shopping_cart</span>
-                                        </div>
-                                        <h3>Keranjang Kosong</h3>
-                                        <p>Belum ada produk yang ditambahkan ke keranjang</p>
-                                        <a href="#" class="btn btn-primary" onclick="showMainAppPage('produk')">Mulai
-                                            Belanja</a>
-                                    </div>
-                                </div>
-
-                                <div class="cart-actions" id="cart-actions" style="display: none;">
-                                    <button class="btn btn-secondary" onclick="clearCart()">Kosongkan Keranjang</button>
-                                    <button class="btn btn-primary" id="checkout-from-cart-btn">Lanjut ke
-                                        Pembayaran</button>
-                                </div>
+                            <div class="modal-footer">
+                                <button id="print-transaction-detail" class="btn btn-primary">
+                                    <i class="fas fa-print"></i> Cetak
+                                </button>
+                                <button id="close-detail-btn" class="btn btn-secondary">Tutup</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
     <!-- Modal Sukses Pembayaran -->
-    <div id="success-modal" class="modal" style="display: none; opacity: 0;">
+    <div id="success-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Pembayaran Berhasil!</h3>
-                <button class="close-btn" id="close-success-modal">&times;</button>
             </div>
-            <div class="modal-body text-center">
+            <div class="modal-body">
                 <div class="success-icon">
-                    <span class="material-symbols-outlined !text-6xl text-green-500">check_circle</span>
+                    <i class="fas fa-check-circle" style="color: var(--success-color); font-size: 4rem;"></i>
                 </div>
                 <div class="success-message" id="success-message">
                     <!-- Success message will be inserted here by JavaScript -->
                 </div>
             </div>
-            <div class="modal-footer justify-center">
-                <button id="close-success-modal-btn" class="btn btn-primary">OK</button>
+            <div class="modal-footer">
+                <button id="close-success-modal" class="btn primary-btn">OK</button>
             </div>
         </div>
     </div>
 
     <!-- Modal untuk Tambah/Edit Produk -->
-    <div id="product-modal" class="modal" style="display: none; opacity: 0;">
+    <div id="product-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="product-modal-title">Tambah Produk</h3>
                 <button class="close-btn" id="close-product-modal">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="product-form">
-                    <div class="form-group">
-                        <label for="product-name">Nama Produk</label>
-                        <input type="text" id="product-name" class="form-control" required>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">Nama Produk</label>
+                    <input type="text" id="product-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Kategori</label>
+                    <select id="product-category" class="form-control" required hidden>
+                        <!-- Opsi kategori akan dimuat di sini -->
+                    </select>
+                    <div class="select-button-group" id="product-category-buttons">
+                        <!-- Tombol kategori akan dimuat di sini -->
                     </div>
-                    <div class="form-group">
-                        <label for="product-category">Kategori</label>
-                        <select id="product-category" class="form-control" required hidden>
-                            <!-- Opsi kategori akan dimuat di sini -->
-                        </select>
-                        <div class="select-button-group" id="product-category-buttons">
-                            <!-- Tombol kategori akan dimuat di sini -->
-                        </div>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Harga</label>
+                    <input type="number" id="product-price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Deskripsi</label>
+                    <textarea id="product-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">URL Gambar</label>
+                    <input type="text" id="product-image" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="product-status">Status</label>
+                    <select id="product-status" class="form-control" required hidden>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                    <div class="status-select-buttons" id="product-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif"
+                            data-value="Nonaktif">Nonaktif</button>
                     </div>
-                    <div class="form-group">
-                        <label for="product-price">Harga</label>
-                        <input type="number" id="product-price" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-description">Deskripsi</label>
-                        <textarea id="product-description" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-image">URL Gambar</label>
-                        <input type="text" id="product-image" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="product-status">Status</label>
-                        <select id="product-status" class="form-control" required hidden>
-                            <option value="Aktif">Aktif</option>
-                            <option value="Nonaktif">Nonaktif</option>
-                        </select>
-                        <div class="status-select-buttons" id="product-status-buttons">
-                            <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
-                            <button type="button" class="status-select-button nonaktif"
-                                data-value="Nonaktif">Nonaktif</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-product">Batal</button>
-                <button type="submit" class="btn btn-primary" form="product-form" id="save-product-btn">
-                    <span id="product-save-text">Simpan</span>
-                </button>
-            </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="save-product-btn">
+                        <span id="product-save-text">Simpan</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancel-product">Batal</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Modal untuk Tambah/Edit Kategori -->
-    <div id="category-modal" class="modal" style="display: none; opacity: 0;">
+    <div id="category-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="category-modal-title">Tambah Kategori</h3>
                 <button class="close-btn" id="close-category-modal">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="category-form">
-                    <div class="form-group">
-                        <label for="category-name">Nama Kategori</label>
-                        <input type="text" id="category-name" class="form-control" required>
+            <form id="category-form">
+                <div class="form-group">
+                    <label for="category-name">Nama Kategori</label>
+                    <input type="text" id="category-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-order">Urutan</label>
+                    <input type="number" id="category-order" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-status">Status</label>
+                    <select id="category-status" class="form-control" required hidden>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                    <div class="status-select-buttons" id="category-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif"
+                            data-value="Nonaktif">Nonaktif</button>
                     </div>
-                    <div class="form-group">
-                        <label for="category-order">Urutan</label>
-                        <input type="number" id="category-order" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="category-status">Status</label>
-                        <select id="category-status" class="form-control" required hidden>
-                            <option value="Aktif">Aktif</option>
-                            <option value="Nonaktif">Nonaktif</option>
-                        </select>
-                        <div class="status-select-buttons" id="category-status-buttons">
-                            <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
-                            <button type="button" class="status-select-button nonaktif"
-                                data-value="Nonaktif">Nonaktif</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-category">Batal</button>
-                <button type="submit" class="btn btn-primary" form="category-form" id="save-category-btn">
-                    <span id="category-save-text">Simpan</span>
-                </button>
-            </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="save-category-btn">
+                        <span id="category-save-text">Simpan</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancel-category">Batal</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Modal untuk Tambah/Edit Metode Pembayaran -->
-    <div id="payment-modal" class="modal" style="display: none; opacity: 0;">
+    <div id="payment-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="payment-modal-title">Tambah Metode Pembayaran</h3>
                 <button class="close-btn" id="close-payment-modal">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="payment-form">
-                    <div class="form-group">
-                        <label for="payment-name">Nama Metode</label>
-                        <input type="text" id="payment-name" class="form-control" required>
+            <form id="payment-form">
+                <div class="form-group">
+                    <label for="payment-name">Nama Metode</label>
+                    <input type="text" id="payment-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="payment-type">Tipe</label>
+                    <select id="payment-type" class="form-control" required hidden>
+                        <option value="Tunai">Tunai</option>
+                        <option value="Digital">Digital</option>
+                        <option value="Kartu">Kartu</option>
+                    </select>
+                    <div class="select-button-group" id="payment-type-buttons">
+                        <button type="button" class="select-button" data-value="Tunai">Tunai</button>
+                        <button type="button" class="select-button" data-value="Digital">Digital</button>
+                        <button type="button" class="select-button" data-value="Kartu">Kartu</button>
                     </div>
-                    <div class="form-group">
-                        <label for="payment-type">Tipe</label>
-                        <select id="payment-type" class="form-control" required hidden>
-                            <option value="Tunai">Tunai</option>
-                            <option value="Digital">Digital</option>
-                            <option value="Kartu">Kartu</option>
-                        </select>
-                        <div class="select-button-group" id="payment-type-buttons">
-                            <button type="button" class="select-button" data-value="Tunai">Tunai</button>
-                            <button type="button" class="select-button" data-value="Digital">Digital</button>
-                            <button type="button" class="select-button" data-value="Kartu">Kartu</button>
-                        </div>
+                </div>
+                <div class="form-group">
+                    <label for="payment-status">Status</label>
+                    <select id="payment-status" class="form-control" required hidden>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                    <div class="status-select-buttons" id="payment-status-buttons">
+                        <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
+                        <button type="button" class="status-select-button nonaktif"
+                            data-value="Nonaktif">Nonaktif</button>
                     </div>
-                    <div class="form-group">
-                        <label for="payment-status">Status</label>
-                        <select id="payment-status" class="form-control" required hidden>
-                            <option value="Aktif">Aktif</option>
-                            <option value="Nonaktif">Nonaktif</option>
-                        </select>
-                        <div class="status-select-buttons" id="payment-status-buttons">
-                            <button type="button" class="status-select-button aktif" data-value="Aktif">Aktif</button>
-                            <button type="button" class="status-select-button nonaktif"
-                                data-value="Nonaktif">Nonaktif</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-payment">Batal</button>
-                <button type="submit" class="btn btn-primary" form="payment-form" id="save-payment-btn">
-                    <span id="payment-save-text">Simpan</span>
-                </button>
-            </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="save-payment-btn">
+                        <span id="payment-save-text">Simpan</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancel-payment">Batal</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Modal untuk Pembayaran - Clean & Minimalist -->
-    <div id="checkout-modal" class="modal" style="display: none; opacity: 0;">
-        <div class="modal-content modal-payment">
+    <!-- Modal untuk Pembayaran -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>Proses Pembayaran</h3>
+                <h3>Pembayaran</h3>
                 <button class="close-btn" id="close-checkout-modal">&times;</button>
             </div>
-            <div class="modal-body">
-                <!-- Total Section -->
-                <div class="payment-total-section">
-                    <div class="total-display">
-                        <span class="total-label">Total Belanja</span>
-                        <span class="total-amount" id="checkout-total">Rp 0</span>
-                    </div>
+            <div class="form-group">
+                <label>Total Belanja</label>
+                <span id="checkout-total" class="total-amount">Rp 0</span>
+            </div>
+            <div class="form-group">
+                <label>Metode Bayar</label>
+                <select id="payment-method" class="form-control" style="display:none;"></select>
+                <div class="payment-methods" id="payment-methods">
+                    <!-- Tombol metode pembayaran akan dimuat di sini -->
                 </div>
+            </div>
 
-                <!-- Payment Method Section -->
-                <div class="payment-section">
-                    <h4 class="section-title">Metode Pembayaran</h4>
-                    <div class="payment-methods-grid" id="payment-methods">
-                        <!-- Payment method buttons will be loaded here -->
-                    </div>
-                </div>
 
-                <!-- Payment Amount Section -->
-                <div class="payment-section">
-                    <h4 class="section-title">Pilih Nominal</h4>
-                    <div class="amount-options" id="payment-amount-options">
-                        <!-- Amount options will be loaded here -->
+            <!-- Pilihan Nominal Bayar (Text only) -->
+            <div class="form-group">
+                <label>Pilih Nominal Bayar</label>
+                <div class="payment-amount-options-container">
+                    <div class="payment-amount-options" id="payment-amount-options">
+                        <!-- Opsi nominal bayar dalam bentuk text akan dimuat di sini -->
                     </div>
-                    <div class="custom-amount">
-                        <label for="amount-paid">Atau masukkan nominal</label>
-                        <input type="text" id="amount-paid" class="amount-input" placeholder="Rp 0">
-                    </div>
-                </div>
-
-                <!-- Change Section -->
-                <div class="change-section" id="payment-result" style="display: none;">
-                    <div class="change-display">
-                        <span class="change-label">Kembalian</span>
-                        <span class="change-amount" id="change-amount">Rp 0</span>
+                    <div class="payment-amount-options-more" id="payment-amount-options-more" style="display: none;">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" id="more-options-btn">... <i
+                                    class="fas fa-chevron-down"></i></button>
+                            <div class="dropdown-content" id="more-options-content">
+                                <!-- Opsi tambahan akan dimuat di sini -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" id="cancel-checkout">Batal</button>
+
+            <div class="form-group">
+                <label for="amount-paid">Nominal Lain</label>
+                <input type="number" id="amount-paid" class="form-control">
+            </div>
+
+            <!-- Hasil Pembayaran -->
+            <div class="payment-result" id="payment-result" style="display: none;">
+                <div class="change-info">
+                    <label>Kembalian:</label>
+                    <span id="change-amount">Rp 0</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
                 <button type="button" class="btn btn-primary" id="confirm-payment">
-                    <span id="confirm-payment-text">Konfirmasi</span>
+                    <span id="confirm-payment-text">Bayar</span>
                 </button>
+                <button type="button" class="btn btn-secondary" id="cancel-checkout">Batal</button>
             </div>
         </div>
     </div>
 
+    <!-- Halaman Keranjang Mobile -->
+    <div id="keranjang-mobile-page" class="page">
+        <div class="container">
+            <div class="header">
+                <div class="header-left">
+                    <h1><i class="fas fa-shopping-cart"></i> Keranjang</h1>
+                </div>
+                <div class="user-info">
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="theme-toggle-keranjang">
+                            <span class="slider round"></span>
+                        </label>
+                        <i class="fas fa-moon" id="theme-icon-keranjang"></i>
+                    </div>
+                    <span id="user-name-keranjang">User</span>
+                </div>
+            </div>
+
+            <div class="keranjang-mobile-container">
+                <div class="cart-items" id="cart-items-mobile">
+                    <!-- Item keranjang akan dimuat di sini -->
+                </div>
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal-mobile">Rp 0</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total:</span>
+                        <span id="cart-total-mobile">Rp 0</span>
+                    </div>
+                    <div class="button-container">
+                        <button class="checkout-btn" id="checkout-btn-mobile">
+                            <i class="fas fa-credit-card"></i> Proses
+                        </button>
+                        <button class="cancel-btn" id="cancel-btn-mobile">
+                            <i class="fas fa-trash"></i> Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modern Glassmorphism Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" data-page="kasir-page" title="Kasir">
+            <i class="fas fa-cash-register nav-icon"></i>
+        </a>
+        <a href="#" class="nav-item cart-icon" data-page="keranjang-mobile-page" title="Keranjang">
+            <i class="fas fa-shopping-cart nav-icon"></i>
+            <span id="mobile-cart-badge" class="cart-badge hidden">0</span>
+        </a>
+        <a href="#" class="nav-item" data-page="pengaturan-page" title="Pengaturan">
+            <i class="fas fa-cog nav-icon"></i>
+        </a>
+        <a href="#" class="nav-item" id="logout-btn" title="Logout">
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+        </a>
+    </div>
 
     <!-- Google API Scripts -->
     <script src="https://apis.google.com/js/api.js"></script>
