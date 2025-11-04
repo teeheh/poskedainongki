@@ -97,6 +97,10 @@ async function loadTransactions() {
                 });
 
                 renderTransactions(transactions);
+                // Update state with loaded transactions (for Settings page compatibility)
+                if (typeof updateState === 'function') {
+                    updateState({ transactions: transactions });
+                }
                 return;
             } catch (error) {
                 console.error('Error memuat dari Google Sheets:', error);
@@ -109,6 +113,10 @@ async function loadTransactions() {
         const transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
 
         renderTransactions(transactions);
+        // Update state with loaded transactions (for Settings page compatibility)
+        if (typeof updateState === 'function') {
+            updateState({ transactions: transactions });
+        }
     } catch (error) {
         console.error('Error memuat transaksi:', error);
         const transactionTableBody = document.getElementById('transaction-table-body');
@@ -119,15 +127,17 @@ async function loadTransactions() {
 }
 
 // Fungsi untuk menampilkan transaksi
-function renderTransactions(transactions) {
-    const transactionTableBody = document.getElementById('transaction-table-body');
+function renderTransactions(transactions, targetElementId = 'transaction-table-body') {
+    const transactionTableBody = document.getElementById(targetElementId);
     if (!transactionTableBody) return;
 
     transactionTableBody.innerHTML = '';
 
     if (transactions.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6" class="text-center">Tidak ada data transaksi</td>';
+        // Check if this is the Settings page table structure (6 columns) or main page (6 columns)
+        const colspan = targetElementId === 'transaction-table-body' ? 6 : 6;
+        row.innerHTML = `<td colspan="${colspan}" class="text-center">Tidak ada data transaksi</td>`;
         transactionTableBody.appendChild(row);
         return;
     }
@@ -138,28 +148,67 @@ function renderTransactions(transactions) {
         const date = new Date(transaction.date);
         const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 
-        row.innerHTML = `
-            <td>${transaction.id}</td>
-            <td>${formattedDate}</td>
-            <td>${formatRupiah(transaction.total)}</td>
-            <td>${transaction.paymentMethod}</td>
-            <td><span class="status-badge active">${transaction.status}</span></td>
-            <td>
-                <button class="action-btn view-btn" data-id="${transaction.id}">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="action-btn print-btn" data-id="${transaction.id}">
-                    <i class="fas fa-print"></i>
-                </button>
-            </td>
-        `;
+        // Check if this is the Settings page table (has different structure)
+        const isSettingsPage = targetElementId === 'transaction-table-body' &&
+            document.getElementById('pengaturan-page') &&
+            document.getElementById('pengaturan-page').style.display !== 'none';
+
+        if (isSettingsPage) {
+            // Settings page table structure
+            row.innerHTML = `
+                <td class="id-col">
+                    <span class="transaction-id">${transaction.id}</span>
+                </td>
+                <td class="date-col">
+                    <div class="date-cell">
+                        <span class="date-value">${formatDate(transaction.date)}</span>
+                        <span class="time-value">${formatTime(transaction.date)}</span>
+                    </div>
+                </td>
+                <td class="amount-col">
+                    <span class="amount-value">${formatRupiah(transaction.total || transaction.total_penjualan || 0)}</span>
+                </td>
+                <td class="method-col">
+                    <span class="method-badge">${transaction.paymentMethod || 'Tunai'}</span>
+                </td>
+                <td class="status-col">
+                    <span class="status-badge success">${transaction.status || 'Berhasil'}</span>
+                </td>
+                <td class="actions-col">
+                    <button class="action-btn detail-btn" data-id="${transaction.id}" title="Detail">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    <button class="action-btn print-btn" data-id="${transaction.id}" title="Cetak">
+                        <span class="material-symbols-outlined">print</span>
+                    </button>
+                </td>
+            `;
+        } else {
+            // Main transaction page table structure
+            row.innerHTML = `
+                <td>${transaction.id}</td>
+                <td>${formattedDate}</td>
+                <td>${formatRupiah(transaction.total || transaction.total_penjualan || 0)}</td>
+                <td>${transaction.paymentMethod || 'Tunai'}</td>
+                <td><span class="status-badge active">${transaction.status || 'Berhasil'}</span></td>
+                <td>
+                    <button class="action-btn view-btn" data-id="${transaction.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn print-btn" data-id="${transaction.id}">
+                        <i class="fas fa-print"></i>
+                    </button>
+                </td>
+            `;
+        }
 
         transactionTableBody.appendChild(row);
     });
 
-    // Event listener untuk tombol lihat detail
-    function attachViewButtonListeners() {
-        document.querySelectorAll('.view-btn').forEach(btn => {
+    // Event listener untuk tombol lihat detail dan detail
+    function attachDetailButtonListeners() {
+        // Handle both .view-btn (main page) and .detail-btn (Settings page)
+        document.querySelectorAll('.view-btn, .detail-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const transactionId = btn.getAttribute('data-id');
                 viewTransactionDetail(transactionId);
@@ -169,9 +218,9 @@ function renderTransactions(transactions) {
 
     // Attach listeners when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachViewButtonListeners);
+        document.addEventListener('DOMContentLoaded', attachDetailButtonListeners);
     } else {
-        attachViewButtonListeners();
+        attachDetailButtonListeners();
     }
 
     // Event listener untuk tombol print
@@ -721,13 +770,48 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Tab pengaturan
+    // Tab pengaturan - Enhanced to work with both legacy and enhanced tab systems
     const tabBtns = document.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
         btn.addEventListener('click', function () {
             const tab = this.getAttribute('data-tab');
             if (tab === 'detail_transaksi') {
-                loadTransactions();
+                // Check if we're in the Settings page context by looking for pengaturan-page
+                const pengaturanPage = document.getElementById('pengaturan-page');
+                if (pengaturanPage && pengaturanPage.style.display !== 'none') {
+                    // We're in Settings page, use displayTransaksiTable from app.js
+                    if (typeof displayTransaksiTable === 'function') {
+                        displayTransaksiTable();
+                    } else {
+                        console.error('displayTransaksiTable function not found');
+                    }
+                } else {
+                    // We're in main transaction page, use loadTransactions
+                    loadTransactions();
+                }
+            }
+        });
+    });
+
+    // Enhanced tab system support
+    const enhancedTabBtns = document.querySelectorAll('.enhanced-tab-btn');
+    enhancedTabBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const tab = this.getAttribute('data-tab');
+            if (tab === 'detail_transaksi') {
+                // Check if we're in the Settings page context
+                const pengaturanPage = document.getElementById('pengaturan-page');
+                if (pengaturanPage && pengaturanPage.style.display !== 'none') {
+                    // We're in Settings page, use displayTransaksiTable from app.js
+                    if (typeof displayTransaksiTable === 'function') {
+                        displayTransaksiTable();
+                    } else {
+                        console.error('displayTransaksiTable function not found');
+                    }
+                } else {
+                    // We're in main transaction page, use loadTransactions
+                    loadTransactions();
+                }
             }
         });
     });
@@ -762,3 +846,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// Format Rupiah
+function formatRupiah(amount) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
+
+// Format Date for display
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+// Format Time for display
+function formatTime(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
