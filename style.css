@@ -886,6 +886,16 @@ input:checked+.slider:before {
     color: var(--danger-color);
 }
 
+/* Dark mode close button */
+[data-theme="dark"] .close-btn {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .close-btn:hover {
+    color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
 .modal .form-group {
     margin-bottom: var(--spacing-md);
     padding: 0 var(--spacing-lg);
@@ -3032,6 +3042,13 @@ input:checked+.slider:before {
     border: 1px solid #e9ecef;
 }
 
+/* Dark mode change composition */
+[data-theme="dark"] .change-composition {
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.8) 0%, rgba(44, 62, 80, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .change-item {
     display: flex;
     justify-content: space-between;
@@ -3102,6 +3119,20 @@ input:checked+.slider:before {
     color: var(--success-color);
 }
 
+/* Dark mode change info */
+[data-theme="dark"] .change-info {
+    background-color: var(--light-color);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .change-info label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .change-info span {
+    color: var(--success-color);
+}
+
 /* Payment methods as buttons */
 .payment-methods {
     display: flex;
@@ -3136,6 +3167,25 @@ input:checked+.slider:before {
 .payment-method-btn.selected {
     background-color: var(--primary-color);
     color: white;
+}
+
+/* Dark mode payment method buttons */
+[data-theme="dark"] .payment-method-btn {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .payment-method-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .payment-method-btn.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 /* Payment amount options as text */
@@ -3186,6 +3236,37 @@ input:checked+.slider:before {
     border-color: var(--success-color);
     color: var(--success-color);
     background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Dark mode payment amount options */
+[data-theme="dark"] .payment-amount-option {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .payment-amount-option:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(0, 168, 204, 0.1);
+}
+
+[data-theme="dark"] .payment-amount-option.selected {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(0, 168, 204, 0.1);
+}
+
+[data-theme="dark"] .payment-amount-option.exact {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+[data-theme="dark"] .payment-amount-option.exact:hover,
+[data-theme="dark"] .payment-amount-option.exact.selected {
+    border-color: var(--success-color);
+    color: var(--success-color);
+    background-color: rgba(40, 167, 69, 0.2);
 }
 
 /* Dropdown for more payment options */
@@ -3256,6 +3337,23 @@ input:checked+.slider:before {
     background-color: rgba(0, 168, 204, 0.1);
 }
 
+/* Dark mode dropdown payment amount options */
+[data-theme="dark"] .dropdown-content .payment-amount-option {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .dropdown-content .payment-amount-option:hover {
+    background-color: rgba(0, 168, 204, 0.1);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .dropdown-content .payment-amount-option.selected {
+    background-color: rgba(0, 168, 204, 0.15);
+    color: var(--primary-color);
+}
+
 /* Payment suggestions grid with consistent spacing */
 .payment-suggestions {
     display: grid;
@@ -3323,6 +3421,14 @@ input:checked+.slider:before {
     padding: 15px;
     margin: 15px 0;
     border-left: 4px solid var(--success-color);
+}
+
+/* Dark mode payment result */
+[data-theme="dark"] .payment-result {
+    background: linear-gradient(145deg, rgba(52, 73, 94, 0.95) 0%, rgba(44, 62, 80, 0.95) 100%);
+    border-left-color: var(--success-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Form actions alignment */
